@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        const hotels = await prisma.hotels.findMany({
+        const hotels = await prisma.hotel.findMany({
             include: {
-                ville: true
+                city: true
             }
         });
         return NextResponse.json(hotels);
@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const hotel = await prisma.hotels.create({
+        const hotel = await prisma.hotel.create({
             data: body
         });
         return NextResponse.json(hotel, { status: 201 });

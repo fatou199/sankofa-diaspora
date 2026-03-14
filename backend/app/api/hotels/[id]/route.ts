@@ -5,9 +5,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     try {
         const { id: idStr } = await params;
         const id = parseInt(idStr);
-        const hotel = await prisma.hotels.findUnique({
+        const hotel = await prisma.hotel.findUnique({
             where: { id },
-            include: { ville: true, avis_hotels: true }
+            include: { city: true, reviews: true }
         });
         if (!hotel) return NextResponse.json({ error: "Hôtel non trouvé" }, { status: 404 });
         return NextResponse.json(hotel);
@@ -21,7 +21,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const { id: idStr } = await params;
         const id = parseInt(idStr);
         const body = await request.json();
-        const hotel = await prisma.hotels.update({
+        const hotel = await prisma.hotel.update({
             where: { id },
             data: body
         });
@@ -35,7 +35,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     try {
         const { id: idStr } = await params;
         const id = parseInt(idStr);
-        await prisma.hotels.delete({ where: { id } });
+        await prisma.hotel.delete({ where: { id } });
         return NextResponse.json({ message: "Hôtel supprimé" });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 400 });

@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth";
 
-export async function proxy(request: NextRequest) {
+export async function proxy (request: NextRequest) {
   const publicPaths = [
     "/api/users/login",
     "/api/users/register",
-    "/api/pays",
-    "/api/villes"
+    "/api/countries",
+    "/api/cities"
   ];
 
   const path = request.nextUrl.pathname;

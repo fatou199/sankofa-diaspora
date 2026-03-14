@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const id = parseInt(idStr);
         const restaurant = await prisma.restaurant.findUnique({
             where: { id },
-            include: { ville: true, avis_restaurants: true }
+            include: { city: true, reviews: true }
         });
         if (!restaurant) return NextResponse.json({ error: "Restaurant non trouvé" }, { status: 404 });
         return NextResponse.json(restaurant);

@@ -11,15 +11,19 @@ export const POST = withErrorHandling(async (request: Request) => {
   const validatedData = UserSchema.parse(body);
 
   // Hashage du mot de passe
-  const hashedPassword = await hashPassword(validatedData.password);
+  const { password, originCountryIds, ...userData } = validatedData;
+  const hashedPassword = await hashPassword(password);
 
   const user = await prisma.user.create({
     data: {
-      ...validatedData,
-      password: hashedPassword
+      ...userData,
+      password: hashedPassword,
+      origins: originCountryIds ? {
+        connect: originCountryIds.map((id: number) => ({ id }))
+      } : undefined
     }
   });
 
-  const { password, ...userWithoutPassword } = user;
+  const { password: _pw, ...userWithoutPassword } = user;
   return NextResponse.json(userWithoutPassword, { status: 201 });
 });

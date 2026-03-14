@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,333 +11,380 @@ datasource db {
 }
 
 model User {
-  id                               Int     @id @default(autoincrement())
-  nom                              String
-  prenom                           String
-  email                            String  @unique
-  password                         String
-  date_naiss                       DateTime?
-  diaspora_country                 String
-  origin_country_id                Int
+  id                Int      @id @default(autoincrement())
+  lastName          String
+  firstName         String
+  email             String   @unique
+  password          String
+  birthDate         DateTime?
+  diasporaCountry   String
+  originDetails     String?  // Free text for multiple origins or precise city
             
   // Relations            
-  origin_country                   Pays @relation(fields: [origin_country_id], references: [id], onDelete: Cascade)
-  itineraires                      Itineraire[] 
-  sejours                          Sejours[]
-  avis_hotels                      AvisHotel[]
-  avis_restaurants                 AvisRestaurant[]
-  avis_activites                   AvisActivite[]
-  favoris_hotels                   FavorisHotel[]
-  favoris_restaurants              FavorisRestaurant[]
-  favoris_activites                FavorisActivite[]
+  origins           Country[] @relation("UserOrigins")
+  itineraries       Itinerary[] 
+  stays             Stay[]
+  reviewsHotel      ReviewHotel[]
+  reviewsRestaurant ReviewRestaurant[]
+  reviewsActivity   ReviewActivity[]
+  favoritesHotel    FavoriteHotel[]
+  favoritesRestaurant FavoriteRestaurant[]
+  favoritesActivity  FavoriteActivity[]
             
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
-}            
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("users")
+}
             
-model Pays {            
-  id                               Int     @id @default(autoincrement())
-  image                            String? 
-  nom                              String
-  description                      String @db.Text
-  monnaie                          String
+model Country {            
+  id                 Int      @id @default(autoincrement())
+  name               String
+  image              String? 
+  imageMap           String?
+  description        String   @db.Text
+  currency           String
+  capital            String?
+  isoCode            String?
+  officialLanguages  String?
+  population         String?
+  bestPeriod         String?
+  
+  // Visa requirements for passports: 
+  visaRequiredFR     Boolean  @default(false)
 
   // Relations
-  users                            User[]
-  villes                           Villes[]
+  users              User[]   @relation("UserOrigins")
+  cities             City[]
+  itineraries        Itinerary[]
             
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("countries")
 }
 
-model Villes {
-  id                               Int     @id @default(autoincrement())
-  nom                              String
-  description                      String @db.Text
-  latitude                         Float
-  longitude                        Float
-  pays_id                          Int    
+model City {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  description        String   @db.Text
+  latitude           Float
+  longitude          Float
+  countryId          Int    
 
   // Relations
-  pays                             Pays @relation(fields: [pays_id], references: [id], onDelete: Cascade)
-  hotels                           Hotels[]
-  restaurants                      Restaurant[]
-  activites                        Activite[]
-  itineraires                      Itineraire[]
+  country            Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  hotels             Hotel[]
+  restaurants        Restaurant[]
+  activities         Activity[]
+  itineraryDetails   ItineraryDetail[]
+  itineraries        Itinerary[] @relation("ItineraryCities")
             
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("cities")
 }
 
-model Hotels {
-  id                               Int     @id @default(autoincrement())
-  nom                              String
-  description                      String @db.Text
-  prix_nuit                        Float
-  niveau_confort                   NiveauConfort 
-  latitude                         Float
-  longitude                        Float
-  ville_id                         Int
+model Hotel {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  description        String   @db.Text
+  pricePerNight      Float
+  comfortLevel       ComfortLevel 
+  latitude           Float
+  longitude          Float
+  cityId             Int
 
   // Relations
-  ville                            Villes @relation(fields: [ville_id], references: [id], onDelete: Cascade)
-  avis_hotels                      AvisHotel[]
-  favoris_hotels                   FavorisHotel[]
+  city               City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  reviews            ReviewHotel[]
+  favorites          FavoriteHotel[]
             
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("hotels")
 }
 
 model Restaurant {
-  id                               Int      @id @default(autoincrement())
-  nom                              String
-  description                      String   @db.Text
-  cuisine                          TypeCuisine  
-  adresse                          String
-  prix_moyen                       Float
-  horaires                         String
-  telephone                        String?
-  latitude                         Float
-  longitude                        Float
-  ville_id                         Int
+  id                 Int      @id @default(autoincrement())
+  name               String
+  description        String   @db.Text
+  cuisineType        CuisineType  
+  address            String
+  averagePrice       Float
+  openingHours       String
+  phone              String?
+  latitude           Float
+  longitude          Float
+  cityId             Int
 
   // Relations
-  ville                            Villes @relation(fields: [ville_id], references: [id], onDelete: Cascade)
-  avis_restaurants                 AvisRestaurant[]
-  favoris_restaurants              FavorisRestaurant[]
-  itineraires_restaurants          ItineraireRestaurant[]
+  city               City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  reviews            ReviewRestaurant[]
+  favorites          FavoriteRestaurant[]
+  itineraryRestaurants ItineraryRestaurant[]
 
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("restaurants")
 }
 
-model Activite {
-  id                               Int    @id @default(autoincrement())
-  nom                              String
-  description                      String @db.Text
-  prix                             Float
-  horaire                          String
-  categorie                        CategorieActivite
-  adresse                          String
-  latitude                         Float
-  longitude                        Float
-  ville_id                         Int
+model Activity {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  description        String   @db.Text
+  price              Float
+  openingHours       String
+  category           ActivityCategory
+  address            String
+  latitude           Float
+  longitude          Float
+  cityId             Int
 
   // Relations
-  ville                            Villes @relation(fields: [ville_id], references: [id], onDelete: Cascade)
-  avis_activites                   AvisActivite[]
-  favoris_activites                FavorisActivite[]
-  itineraires_activites            ItineraireActivite[]
+  city               City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  reviews            ReviewActivity[]
+  favorites          FavoriteActivity[]
+  itineraryActivities ItineraryActivity[]
 
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("activities")
 }
 
-model Itineraire {
-  id                               Int      @id @default(autoincrement())
-  date_debut                       DateTime
-  date_fin                         DateTime
-  budget                           Float
-  preferences                      String   @db.Text
-  user_id                          Int
-  ville_id                         Int
+model Itinerary {
+  id                 Int      @id @default(autoincrement())
+  startDate          DateTime
+  endDate            DateTime
+  budget             Float
+  adults             Int                @default(1)
+  children           Int                @default(0)
+  interests          ActivityCategory[]
+  userId             Int
+  countryId          Int?                // Pays de destination
+  cityIds            Int[]               @default([]) // Liste des IDs de villes
+  cities             City[]              @relation("ItineraryCities")
 
   // Relations
-  user                             User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  ville                            Villes @relation(fields: [ville_id], references: [id], onDelete: Cascade)
-  details                          ItineraireDetail[]
-  sejours                          Sejours[]
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  country            Country? @relation(fields: [countryId], references: [id], onDelete: SetNull)
+  details            ItineraryDetail[]
+  stays              Stay[]
 
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("itineraries")
 }
 
-
-model ItineraireDetail {
-  id                               Int      @id @default(autoincrement())
-  jour                             Int  
-  notes                            String   @db.Text
-  itineraire_id                    Int
+model ItineraryDetail {
+  id                 Int      @id @default(autoincrement())
+  day                Int  
+  notes              String   @db.Text
+  itineraryId        Int
+  cityId             Int?     // A trip can pass through multiple cities
 
   // Relations
-  itineraire                       Itineraire @relation(fields: [itineraire_id], references: [id], onDelete: Cascade)
-  activites                        ItineraireActivite[]
-  restaurants                      ItineraireRestaurant[]
+  itinerary          Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  city               City?     @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  activities         ItineraryActivity[]
+  restaurants        ItineraryRestaurant[]
 
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("itinerary_details")
 }
 
-
-model ItineraireActivite {
-  id                               Int      @id @default(autoincrement())
-  itineraire_detail_id             Int 
-  activite_id                      Int
+model ItineraryActivity {
+  id                 Int      @id @default(autoincrement())
+  itineraryDetailId  Int 
+  activityId         Int
 
   // Relations
-  itineraire_detail                ItineraireDetail @relation(fields: [itineraire_detail_id], references: [id], onDelete: Cascade)
-  activite                         Activite @relation(fields: [activite_id], references: [id], onDelete: Cascade)
+  itineraryDetail    ItineraryDetail @relation(fields: [itineraryDetailId], references: [id], onDelete: Cascade)
+  activity           Activity        @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
-  @@unique([itineraire_detail_id, activite_id])
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  @@unique([itineraryDetailId, activityId])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-
+  @@map("itinerary_activities")
 }
 
-model ItineraireRestaurant {
-  id                               Int      @id @default(autoincrement())
-  itineraire_detail_id             Int
-  restaurant_id                    Int
+model ItineraryRestaurant {
+  id                 Int      @id @default(autoincrement())
+  itineraryDetailId  Int
+  restaurantId       Int
 
   // Relations
-  itineraire_detail                ItineraireDetail @relation(fields: [itineraire_detail_id], references: [id], onDelete: Cascade)
-  restaurant                       Restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  itineraryDetail    ItineraryDetail @relation(fields: [itineraryDetailId], references: [id], onDelete: Cascade)
+  restaurant         Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
-  @@unique([itineraire_detail_id, restaurant_id])
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  @@unique([itineraryDetailId, restaurantId])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("itinerary_restaurants")
 }
 
-model Sejours {
-  id                               Int      @id @default(autoincrement())
-  user_id                          Int
-  itineraire_id                    Int
-  date_debut_reel                  DateTime
-  date_fin_reel                    DateTime
-  budget_depense                   Float
+model Stay {
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  itineraryId        Int
+  actualStartDate    DateTime
+  actualEndDate      DateTime
+  spentBudget        Float
 
   // Relations
-  user                             User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  itineraire                       Itineraire @relation(fields: [itineraire_id], references: [id], onDelete: Cascade)
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itinerary          Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
 
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("stays")
 }
 
-// Tables d'avis séparées
-model AvisHotel {
-  id                               Int     @id @default(autoincrement())
-  user_id                          Int
-  hotel_id                         Int
-  rating                           Int     // 1-5
-  commentaire                      String  @db.Text
-  date_avis                        DateTime @default(now())
+model ReviewHotel {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  hotelId           Int
+  rating            Int      // 1-5
+  comment           String   @db.Text
+  reviewDate        DateTime @default(now())
               
   // Relations            
-  user                             User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  hotel                            Hotels  @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel             Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
               
-  @@unique([user_id, hotel_id])
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  @@unique([userId, hotelId])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("hotel_reviews")
 }
 
-model AvisRestaurant {
-  id                               Int     @id @default(autoincrement())
-  user_id                          Int
-  restaurant_id                    Int
-  rating                           Int     // 1-5
-  commentaire                      String  @db.Text
-  date_avis                        DateTime @default(now())
+model ReviewRestaurant {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  restaurantId      Int
+  rating            Int      // 1-5
+  comment           String   @db.Text
+  reviewDate        DateTime @default(now())
   
   // Relations
-  user                             User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  restaurant                       Restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   
-  @@unique([user_id, restaurant_id])
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  @@unique([userId, restaurantId])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("restaurant_reviews")
 }
 
-model AvisActivite {
-  id                               Int     @id @default(autoincrement())
-  user_id                          Int
-  activite_id                      Int
-  rating                           Int     // 1-5
-  commentaire                      String  @db.Text
-  date_avis                        DateTime @default(now())
+model ReviewActivity {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  activityId        Int
+  rating            Int      // 1-5
+  comment           String   @db.Text
+  reviewDate        DateTime @default(now())
   
   // Relations
-  user                             User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  activite                         Activite @relation(fields: [activite_id], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity          Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
               
-  @@unique([user_id, activite_id])
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
-}            
+  @@unique([userId, activityId])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("activity_reviews")
+}
             
-// Tables de favoris séparées
-model FavorisHotel {            
-  id                               Int     @id @default(autoincrement())
-  user_id                          Int
-  hotel_id                         Int
+            
+model FavoriteHotel {            
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  hotelId           Int
   
   // Relations
-  user                             User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  hotel                            Hotels  @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel             Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
   
-  @@unique([user_id, hotel_id])
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  @@unique([userId, hotelId])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("favorite_hotels")
 }
 
-model FavorisRestaurant {
-  id                               Int     @id @default(autoincrement())
-  user_id                          Int
-  restaurant_id                    Int
+model FavoriteRestaurant {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  restaurantId      Int
   
   // Relations
-  user                             User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  restaurant                       Restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   
-  @@unique([user_id, restaurant_id])
-  createdAt                        DateTime @default(now())
-  updatedAt                        DateTime @updatedAt
+  @@unique([userId, restaurantId])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("favorite_restaurants")
 }
 
-model FavorisActivite {
-  id                               Int     @id @default(autoincrement())
-  user_id                          Int
-  activite_id                      Int
+model FavoriteActivity {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  activityId        Int
   
   // Relations
-  user                             User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  activite                         Activite @relation(fields: [activite_id], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity          Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
   
-  @@unique([user_id, activite_id])
-  createdAt                       DateTime @default(now())
-  updatedAt                       DateTime @updatedAt
+  @@unique([userId, activityId])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("favorite_activities")
 }
-
-
 
 // Enums
-enum NiveauConfort {
-  BASIQUE
-  CONFORTABLE
-  LUXE
+enum ComfortLevel {
+  BASIC
+  COMFORTABLE
+  LUXURY
 }
 
-enum TypeCuisine {
-  FRANCAISE
-  ITALIENNE
-  ASIATIQUE
-  AFRICAINE
-  INDIENNE
-  VEGETARIENNE
-  AUTRE
+enum CuisineType {
+  FRENCH
+  ITALIAN
+  ASIAN
+  AFRICAN
+  INDIAN
+  VEGETARIAN
+  OTHER
 }
 
-enum CategorieActivite {
+enum ActivityCategory {
   SPORT
   CULTURE
-  GASTRONOMIE
+  GASTRONOMY
   NATURE
-  LOISIRS
-  HISTOIRE
+  LEISURE
+  HISTORY
   ART
-  AVENTURE
+  ADVENTURE
   RELAXATION
-  AUTRE
+  BEACH
+  PHOTOGRAPHY
+  SHOPPING
+  OTHER
 }

@@ -6,7 +6,7 @@ async function testBackend() {
 
   try {
     // 1. Tester la récupération des pays (Public)
-    console.log("\n1. Test GET /api/pays...");
+    console.log("\n1. Test GET /api/countries...");
     const resPays = await fetch(`${BASE_URL}/pays`);
     console.log("Statut:", resPays.status);
     if (resPays.ok) console.log("Succès: Pays récupérés");
@@ -34,7 +34,7 @@ async function testBackend() {
     console.log("Détails validation:", JSON.stringify(dataVal.details));
 
     // 4. Tester la protection Middleware
-    console.log("\n4. Test POST /api/activite (Sans token - Devrait échouer)...");
+    console.log("\n4. Test POST /api/activities (Sans token - Devrait échouer)...");
     const resAuthFail = await fetch(`${BASE_URL}/activite`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

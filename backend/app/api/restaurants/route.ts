@@ -5,7 +5,7 @@ export async function GET() {
     try {
         const restaurants = await prisma.restaurant.findMany({
             include: {
-                ville: true
+                city: true
             }
         });
         return NextResponse.json(restaurants);

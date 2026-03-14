@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const id = parseInt(idStr);
         const user = await prisma.user.findUnique({
             where: { id },
-            include: { origin_country: true, itineraires: true }
+            include: { origins: true, itineraries: true }
         });
         if (!user) return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
         const { password, ...userWithoutPassword } = user;
