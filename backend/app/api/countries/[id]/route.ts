@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 
@@ -7,7 +8,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const id = parseInt(idStr);
         const country = await prisma.country.findUnique({
             where: { id },
-            include: { cities: true }
+            include: { 
+                cities: {
+                    include: {
+                        activities: {
+                            take: 4 // Just a few for the incontournables
+                        }
+                    }
+                }
+            }
         });
         if (!country) return NextResponse.json({ error: "Country not found" }, { status: 404 });
         return NextResponse.json(country);

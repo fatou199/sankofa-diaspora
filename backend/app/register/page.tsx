@@ -88,7 +88,7 @@ export default function RegisterPage() {
                         <div className="w-10 h-10 bg-[#00ed64] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,237,100,0.5)] transform rotate-6">
                             <div className="w-5 h-5 bg-black rounded-sm rotate-45" />
                         </div>
-                        <span className="text-2xl font-black text-white tracking-tighter">Sankofa Diaspora</span>
+                        <span className="text-2xl font-black text-white tracking-tighter">Aliniosié</span>
                     </div>
 
                     <div className="space-y-6 max-w-lg">
@@ -124,7 +124,7 @@ export default function RegisterPage() {
 
                 <div className="absolute bottom-12 left-24 z-10">
                     <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">
-                        © 2026 Sankofa Diaspora. All rights reserved.
+                        © 2026 Aliniosié. All rights reserved.
                     </p>
                 </div>
             </div>

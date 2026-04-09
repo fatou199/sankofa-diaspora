@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
+  --background: #050505;
   --foreground: #ffffff;
-  --primary: #00e600; /* Vibrant green from the image */
-  --primary-hover: #00cc00;
+  --primary: #00ed64;
+  /* Vibrant green from the rest of the app */
+  --primary-hover: #00d55a;
   --glass: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
 }

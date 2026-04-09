@@ -5,6 +5,7 @@ import { Country } from "@prisma/client";
 import { MapPin, ArrowRight, Compass, Sparkles, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import Footer from "@/components/Footer";
 import { use, useEffect, useState } from "react";
 
 
@@ -15,14 +16,14 @@ export default function Destinations() {
     const [searchQuery, setSearchQuery] = useState('');
 
     const fetchCountries = async () => {
-    try {
-        const response = await fetch("http://localhost:3000/api/countries");
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error("Error fetching countries:", error);
-        return [];
-    }
+        try {
+            const response = await fetch("http://localhost:3000/api/countries");
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error("Error fetching countries:", error);
+            return [];
+        }
     };
 
     useEffect(() => {
@@ -36,7 +37,7 @@ export default function Destinations() {
     }, []);
 
     // faire la recherche côté client
-    const filteredCountries = countries.filter((country) => 
+    const filteredCountries = countries.filter((country) =>
         country.name?.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
@@ -56,7 +57,7 @@ export default function Destinations() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
                     <div className="space-y-6">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00ed64]/10 border border-[#00ed64]/20 text-[#00ed64] text-[10px] font-black uppercase tracking-[0.3em]">
-                            <Compass size={12} /> Explorez le Continent
+                            <Compass size={12} /> Terres d'Héritage
                         </div>
                         <h1 className="text-5xl md:text-7xl font-black tracking-tighter italic leading-tight">
                             Nos <span className="text-[#00ed64]">Destinations</span> <br />
@@ -86,11 +87,11 @@ export default function Destinations() {
                             <p className="text-white/30 text-lg font-medium">Chargement des destinations...</p>
                         </div>
                     ) : countries.length === 0 ? (
-                            <div className="col-span-full text-center py-20">
-                                <p className="text-white/30 text-lg font-medium">Aucune destination disponible pour le moment. Veuillez réessayer plus tard.</p>
-                            </div>
-                        ) : (
-                    filteredCountries.map((dest: Country, idx: number) => (
+                        <div className="col-span-full text-center py-20">
+                            <p className="text-white/30 text-lg font-medium">Aucune destination disponible pour le moment. Veuillez réessayer plus tard.</p>
+                        </div>
+                    ) : (
+                        filteredCountries.map((dest: Country, idx: number) => (
                             <Link
                                 key={dest.id}
                                 href={`/destinations/${dest.id}`}
@@ -150,12 +151,7 @@ export default function Destinations() {
                 </div>
             </main>
 
-            {/* Simple Footer */}
-            <footer className="py-12 border-t border-white/5 text-center px-6">
-                <p className="text-white/10 text-[9px] font-black uppercase tracking-[0.5em]">
-                    &copy; {new Date().getFullYear()} Sankofa Diaspora • Explorez votre héritage.
-                </p>
-            </footer>
+            <Footer />
         </div>
     );
 }

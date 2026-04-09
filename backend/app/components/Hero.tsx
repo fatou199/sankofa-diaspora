@@ -1,14 +1,22 @@
 "use client";
 
-import { Search, ArrowRight, ArrowLeft, Map, ShieldCheck, Users2, Heart, Star, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Search, ArrowRight, ArrowLeft, Map, ShieldCheck, Users2, Heart, Star, Facebook, Instagram, Twitter, Globe, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Footer from './Footer';
 
 export default function Hero() {
     const router = useRouter();
     const [destinations, setDestinations] = useState<any[]>([]);
+    const [showToast, setShowToast] = useState(false);
+
+    const handleComingSoon = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+    };
 
     useEffect(() => {
         const fetchCountries = async () => {
@@ -95,7 +103,7 @@ export default function Hero() {
                                 </h2>
                                 <h3 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight text-white">
                                     Pourquoi voyager <br />
-                                    avec <span className="text-white/40">Sankofa ?</span>
+                                    avec <span className="text-white/40">Aliniosié ?</span>
                                 </h3>
                             </div>
 
@@ -103,7 +111,10 @@ export default function Hero() {
                                 Nous simplifions l'exploration du continent avec des outils conçus spécifiquement pour les défis et les opportunités du voyage en Afrique.
                             </p>
 
-                            <button className="flex items-center gap-2 text-primary font-bold text-sm hover:gap-3 transition-all group font-sans">
+                            <button 
+                                onClick={handleComingSoon}
+                                className="flex items-center gap-2 text-primary font-bold text-sm hover:gap-3 transition-all group font-sans"
+                            >
                                 En savoir plus
                                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                             </button>
@@ -118,7 +129,7 @@ export default function Hero() {
                                 },
                                 {
                                     title: 'Expériences Authentiques',
-                                    desc: 'Découvrez des logements uniques et des activités gérés directement par des locaux.',
+                                    desc: 'Découvrez des expériences authentiques et des activités gérées directement par des locaux.',
                                     icon: <Heart className="text-primary" size={24} />
                                 },
                                 {
@@ -159,7 +170,7 @@ export default function Hero() {
                                 Les lieux préférés de notre communauté ce mois-ci.
                             </p>
                         </div>
-                        <div className="flex gap-4">
+                        <div className="hidden md:flex gap-4">
                             <button className="p-4 rounded-full border border-white/10 text-white hover:bg-white/10 transition-all active:scale-90">
                                 <ArrowLeft size={24} />
                             </button>
@@ -206,122 +217,56 @@ export default function Hero() {
                         {/* Decorative blob */}
                         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
 
-                        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                            <div className="space-y-8">
-                                <h3 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                                    Prêt pour votre prochaine <br className="hidden md:block" /> aventure ?
-                                </h3>
-                                <p className="text-white/60 text-lg max-w-md font-sans leading-relaxed text-balance">
-                                    Inscrivez-vous à notre newsletter pour recevoir des astuces de voyage exclusives, des alertes de prix et de l'inspiration hebdomadaire.
-                                </p>
+                        <div className="relative z-10 flex flex-col items-center text-center space-y-12 max-w-4xl mx-auto py-10">
+    {/* Badge discret */}
+    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.3em]">
+        <Globe size={14} /> Le manifeste Aliniosié
+    </div>
+    
+    {/* Titre fort */}
+    <h2 className="text-4xl md:text-6xl font-black italic text-white leading-[1.1] tracking-tighter">
+        Bâtir le premier pont numérique <br />
+        <span className="text-primary">vers l'héritage africain.</span>
+    </h2>
+    
+    {/* Texte de transition */}
+    <p className="text-lg md:text-xl text-white/50 font-medium max-w-2xl leading-relaxed">
+        Rejoignez la mission. Nous créons un outil pour que chaque retour sur le continent soit une retrouvaille authentique et simplifiée.
+    </p>
 
-                                <div className="flex flex-col sm:flex-row items-stretch gap-3 max-w-md">
-                                    <input
-                                        type="email"
-                                        placeholder="Votre adresse email"
-                                        className="flex-1 bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-primary/50 transition-colors font-sans"
-                                    />
-                                    <button className="bg-primary hover:bg-primary-hover text-black font-bold px-8 py-4 rounded-2xl transition-all active:scale-95 whitespace-nowrap">
-                                        S'inscrire
-                                    </button>
-                                </div>
-                                <p className="text-white/30 text-xs font-sans">
-                                    Nous respectons votre vie privée. Désabonnement à tout moment.
-                                </p>
-                            </div>
+    {/* Newsletter simplifiée pour le lancement */}
+    <div className="w-full max-w-lg pt-4">
+        <div className="flex flex-col sm:flex-row items-stretch gap-3">
+            <input
+                type="email"
+                placeholder="Votre adresse email"
+                className="flex-1 bg-white/[0.03] border border-white/10 rounded-2xl px-8 py-5 text-white outline-none focus:border-primary/50 transition-colors font-sans"
+            />
+            <button className="bg-primary hover:bg-primary-hover text-black font-black uppercase tracking-widest text-xs px-10 py-5 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/20">
+                Rejoindre
+            </button>
+        </div>
+        <p className="text-white/20 text-[10px] mt-6 font-black uppercase tracking-[0.2em]">
+            Soyez les premiers informés de l'ouverture d'Aliniosié
+        </p>
+    </div>
+</div>
 
-                            {/* Testimonial Card */}
-                            <div className="relative hidden lg:block">
-                                <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full opacity-20 group-hover:opacity-40 transition-opacity" />
-                                <div className="relative bg-white/[0.03] backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] space-y-6 shadow-2xl overflow-hidden group/card max-w-sm ml-auto">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 rounded-full bg-orange-200/20 relative overflow-hidden border border-white/10">
-                                            <Image
-                                                src="https://i.pravatar.cc/150?u=amara"
-                                                alt="Amara Diop"
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-white text-lg">Amara Diop</h4>
-                                            <p className="text-primary text-sm font-bold tracking-wide uppercase">Voyageur Frequent</p>
-                                        </div>
-                                    </div>
-                                    <p className="text-white/80 italic font-sans leading-relaxed">
-                                        "AfriVoyage a complètement changé ma façon de voir notre continent. J'ai découvert des perles au Sénégal que je ne soupçonnais même pas !"
-                                    </p>
-                                    <div className="flex gap-1">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star key={star} size={16} className="fill-yellow-500 text-yellow-500" />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* --- SECTION 5: FOOTER --- */}
-            <footer className="w-full bg-[#050a05] pt-24 pb-12 px-6 border-t border-white/5">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 mb-20">
-                        <div className="lg:col-span-2 space-y-8">
-                            <div className="flex items-center gap-2">
-                                <div className="bg-primary p-1.5 rounded-lg flex items-center justify-center">
-                                    <Search size={22} className="text-black stroke-[3px]" />
-                                </div>
-                                <span className="text-2xl font-bold tracking-tight text-white">Sankofa Diaspora</span>
-                            </div>
-                            <p className="text-white/40 text-base max-w-xs font-sans leading-relaxed">
-                                La première plateforme de planification de voyages dédiée aux explorateurs africains. Authenticité, simplicité et découverte.
-                            </p>
-                            <div className="flex gap-4">
-                                {[Facebook, Twitter, Instagram].map((Icon, i) => (
-                                    <Link key={i} href="#" className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center text-white/60 hover:text-primary hover:border-primary/30 transition-all">
-                                        <Icon size={20} />
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
+            <Footer />
 
-                        <div className="space-y-6">
-                            <h4 className="text-white font-bold text-lg">Entreprise</h4>
-                            <ul className="space-y-4 text-white/40 font-sans text-sm">
-                                <li><Link href="#" className="hover:text-primary transition-colors">À propos</Link></li>
-                                <li><Link href="#" className="hover:text-primary transition-colors">Carrières</Link></li>
-                                <li><Link href="#" className="hover:text-primary transition-colors">Presse</Link></li>
-                                <li><Link href="#" className="hover:text-primary transition-colors">Blog</Link></li>
-                            </ul>
-                        </div>
-
-                        <div className="space-y-6">
-                            <h4 className="text-white font-bold text-lg">Support</h4>
-                            <ul className="space-y-4 text-white/40 font-sans text-sm">
-                                <li><Link href="#" className="hover:text-primary transition-colors">Centre d'aide</Link></li>
-                                <li><Link href="#" className="hover:text-primary transition-colors">Sécurité</Link></li>
-                                <li><Link href="#" className="hover:text-primary transition-colors">Annulation</Link></li>
-                                <li><Link href="#" className="hover:text-primary transition-colors">Signaler un souci</Link></li>
-                            </ul>
-                        </div>
-
-                        <div className="space-y-6">
-                            <h4 className="text-white font-bold text-lg">Légal</h4>
-                            <ul className="space-y-4 text-white/40 font-sans text-sm">
-                                <li><Link href="#" className="hover:text-primary transition-colors">Conditions d'utilisation</Link></li>
-                                <li><Link href="#" className="hover:text-primary transition-colors">Politique de confidentialité</Link></li>
-                                <li><Link href="#" className="hover:text-primary transition-colors">Mentions légales</Link></li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-white/20 text-xs font-sans uppercase tracking-widest">
-                        <p>© 2026 Sankofa Diaspora Inc. Tous droits réservés.</p>
-                        <p className="flex items-center gap-1">Fait avec <Heart size={10} className="fill-primary text-primary" /> en Afrique</p>
+            {/* Notification Toast pour les boutons de la page Hero */}
+            {showToast && (
+                <div className="fixed bottom-8 right-8 z-[200] animate-in fade-in slide-in-from-bottom-5 duration-500">
+                    <div className="bg-primary text-black px-8 py-4 rounded-2xl font-black shadow-[0_20px_50px_rgba(0,237,100,0.3)] flex items-center gap-3 border border-white/20">
+                        <Sparkles size={18} className="animate-pulse" />
+                        <span className="text-[11px] uppercase tracking-[0.1em]">Bientôt disponible sur Aliniosié !</span>
                     </div>
                 </div>
-            </footer>
+            )}
         </div>
     );
 }

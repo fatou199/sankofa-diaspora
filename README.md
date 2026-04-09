@@ -1,6 +1,6 @@
-# Sankofa Diaspora - Monorepo
+# Aliniosié Africa - Monorepo
 
-Bienvenue dans le projet **Sankofa Diaspora**. Cette structure permet de gérer à la fois le backend, l'application web et l'application mobile.
+Bienvenue dans le projet **Aliniosié Africa**. Cette structure permet de gérer à la fois le backend, l'application web et l'application mobile.
 
 ## Structure du projet
 

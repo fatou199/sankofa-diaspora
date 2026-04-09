@@ -121,9 +121,9 @@ export default function Aventures() {
             }
           }}
           className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center mx-auto text-xs sm:text-sm transition-all relative ${isStart || isEnd
-            ? "bg-[#00ed64] text-black font-black z-10 shadow-[0_0_15px_rgba(0,237,100,0.4)]"
+            ? "bg-primary text-black font-black z-10 shadow-primary/30"
             : isInRange
-              ? "bg-[#00ed64]/20 text-[#00ed64]"
+              ? "bg-primary/20 text-primary"
               : isPast
                 ? "opacity-10 cursor-not-allowed"
                 : "hover:bg-white/10"
@@ -174,14 +174,12 @@ export default function Aventures() {
 
 
   const interests = [
-    { id: 'NATURE', icon: <Mountain size={24} />, label: "Nature & Safari" },
-    { id: 'CULTURE', icon: <History size={24} />, label: "Culture & Histoire" },
+    { id: 'CULTURE', icon: <History size={24} />, label: "Culture & Artisanat" },
     { id: 'GASTRONOMY', icon: <Utensils size={24} />, label: "Gastronomie" },
-    { id: 'BEACH', icon: <TreePalm size={24} />, label: "Plage & Détente" },
-    { id: 'ADVENTURE', icon: <Tent size={24} />, label: "Aventure" },
-    { id: 'ART', icon: <ShoppingBag size={24} />, label: "Artisanat & Marchés" },
-    { id: 'PHOTOGRAPHY', icon: <Camera size={24} />, label: "Photographie" },
-    { id: 'RELAXATION', icon: <Flower2 size={24} />, label: "Bien-être & Spa" },
+    { id: 'NATURE', icon: <Mountain size={24} />, label: "Nature" },
+    { id: 'BEACH', icon: <TreePalm size={24} />, label: "Relaxation" },
+    { id: 'ADVENTURE', icon: <Compass size={24} />, label: "Aventure" },
+    { id: 'PHOTOGRAPHY', icon: <Camera size={24} />, label: "Photographie" }
   ];
 
   const getBudgetLabel = () => {
@@ -191,9 +189,15 @@ export default function Aventures() {
   };
 
   const nextStep = () => {
-    if (step === 1 && (!formData.countryId || formData.cityIds.length === 0)) {
-      alert("Veuillez sélectionner une destination et au moins une ville avant de continuer.");
-      return;
+    if (step === 1) {
+      if (!formData.countryId || formData.cityIds.length === 0) {
+        alert("Veuillez sélectionner une destination et au moins une ville avant de continuer.");
+        return;
+      }
+      if (formData.countryId !== "1" && Number(formData.countryId) !== 1) {
+        alert("La génération d'itinéraire automatisée est pour l'instant uniquement disponible pour la Côte d'Ivoire. Le Sénégal et le Mali arrivent très bientôt !");
+        return;
+      }
     }
     if (step === 2 && (!formData.startDate || !formData.endDate)) {
       alert("Veuillez sélectionner vos dates de voyage avant de continuer.");
@@ -259,7 +263,7 @@ export default function Aventures() {
   }
 
   return (
-    <div className="bg-[#050f05] min-h-screen text-white font-sans selection:bg-[#00ed64]/30">
+    <div className="min-h-screen bg-background text-white selection:bg-primary/30 selection:text-black font-sans">
       <Navbar />
 
       <main className="pt-32 pb-20 px-4 md:px-8 max-w-4xl mx-auto">
@@ -275,7 +279,7 @@ export default function Aventures() {
           </div>
           <div className="h-[4px] w-full bg-white/5 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#00ed64] transition-all duration-700 ease-out shadow-[0_0_15px_rgba(0,237,100,0.5)]"
+              className="h-full bg-primary transition-all duration-700 ease-out shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]"
               style={{ width: `${(step / totalSteps) * 100}%` }}
             />
           </div>
@@ -285,17 +289,17 @@ export default function Aventures() {
           {step === 1 && (
             <section className="bg-[#0c1a0c] border border-white/5 rounded-[2rem] p-6 md:p-10 space-y-6">
               <div className="flex items-center gap-3">
-                <MapPin className="text-[#00ed64]" size={22} />
+                <MapPin className="text-primary" size={22} />
                 <h2 className="text-xl font-bold">Où souhaitez-vous aller ?</h2>
               </div>
 
               {/* Search Bar */}
               {/* <div className="relative group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-[#00ed64] transition-colors" size={18} />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-primary transition-colors" size={18} />
                   <input
                     type="text"
                     placeholder="Rechercher un pays, une région ou une ville (ex: Tanzanie, Le Cap...)"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-[#00ed64]/50 focus:ring-4 focus:ring-[#00ed64]/10 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
                   />
                 </div> */}
 
@@ -307,41 +311,60 @@ export default function Aventures() {
                     <div key={i} className="h-44 rounded-[1.5rem] bg-white/5 animate-pulse" />
                   ))
                 ) : (
-                  countries.map((country) => (
-                    <button
-                      key={country.id}
-                      onClick={() => selectCountry(country.id)}
-                      className={`relative h-44 rounded-[1.5rem] overflow-hidden border-2 transition-all duration-300 group ${formData.countryId == country.id ? 'border-[#00ed64]' : 'border-white/5 hover:border-white/20'
+                  countries.map((country) => {
+                    const isAvailable = country.id === 1 || country.id === "1";
+                    const isSelected = formData.countryId == country.id;
+                    
+                    return (
+                      <button
+                        key={country.id}
+                        onClick={() => selectCountry(country.id)}
+                        className={`relative h-44 rounded-[1.5rem] overflow-hidden border-2 transition-all duration-500 group ${
+                          isSelected 
+                            ? 'border-primary shadow-[0_0_25px_rgba(var(--primary-rgb),0.2)]' 
+                            : !isAvailable 
+                              ? 'border-white/5 opacity-80 cursor-not-allowed' 
+                              : 'border-white/5 hover:border-white/20'
                         }`}
-                    >
-                      <img
-                        src={country.imageMap}
-                        alt={country.name}
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
+                      >
+                        <img
+                          src={country.imageMap}
+                          alt={country.name}
+                          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
+                            !isAvailable ? 'grayscale brightness-[0.4]' : 'group-hover:scale-110'
+                          }`}
+                        />
 
-                      {/* Subtle overlay */}
-                      <div className={`absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors ${formData.countryId == country.id ? 'opacity-20' : 'opacity-40'}`} />
+                        {/* Subtle overlay */}
+                        <div className={`absolute inset-0 transition-colors ${
+                          isSelected ? 'bg-primary/10' : isAvailable ? 'bg-black/30 group-hover:bg-black/10' : 'bg-black/50'
+                        }`} />
 
-                      <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                        <span className="text-base font-bold tracking-tight">{country.name}</span>
-                      </div>
+                        <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                          <div className="flex flex-col items-start gap-1">
+                            <span className={`text-base font-black tracking-tight ${!isAvailable ? 'text-white/40' : 'text-white'}`}>
+                              {country.name}
+                            </span>
+                            {!isAvailable && (
+                              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-primary bg-primary/10 border-primary/30 px-2 py-0.5 rounded-md backdrop-blur-md">
+                                Bientôt disponible
+                              </span>
+                            )}
+                          </div>
+                        </div>
 
-                      {/* Radio-style circle at bottom right */}
-                      <div className={`absolute bottom-6 right-6 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center ${formData.countryId == country.id ? 'bg-[#00ed64] border-[#00ed64] shadow-[0_0_10px_rgba(0,237,100,0.5)]' : 'border-white/30 bg-black/20'
-                        }`}>
-                        {formData.countryId == country.id && <div className="w-2.5 h-2.5 bg-black rounded-full" />}
-                      </div>
-                    </button>
-                  ))
+                        {/* Radio-style circle at bottom right */}
+                        {isAvailable && (
+                          <div className={`absolute bottom-6 right-6 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center ${
+                            isSelected ? 'bg-primary border-primary shadow-primary/30' : 'border-white/30 bg-black/20'
+                          }`}>
+                            {isSelected && <div className="w-2.5 h-2.5 bg-black rounded-full" />}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })
                 )}
-
-                {/* <button className="h-44 rounded-[1.5rem] border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-3 hover:bg-white/5 transition-all text-white/40 hover:text-white/60">
-                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                      <MapPinPlusInside size={20} />
-                    </div>
-                    <span className="text-xs font-bold uppercase tracking-wider">Explorer partout</span>
-                  </button> */}
               </div>
 
               {/* City Selection - Appears once a country is selected */}
@@ -352,7 +375,7 @@ export default function Aventures() {
                       <MapPin size={16} />
                       <span className="text-xs font-black uppercase tracking-widest leading-none">Villes de destination</span>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${(formData.cityIds?.length || 0) === 3 ? 'text-[#00ed64] border-[#00ed64]/30 bg-[#00ed64]/10' : 'text-white/20 border-white/5'}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${(formData.cityIds?.length || 0) === 3 ? 'text-primary border-primary/30 bg-primary/10' : 'text-white/20 border-white/5'}`}>
                       {(formData.cityIds?.length || 0)}/3 sélectionnés
                     </span>
                   </div>
@@ -373,7 +396,7 @@ export default function Aventures() {
                             updateField("cityIds", next);
                           }}
                           className={`px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all border ${isSelected
-                            ? 'bg-[#00ed64] text-black border-[#00ed64] shadow-[0_0_20px_rgba(0,237,100,0.3)]'
+                            ? 'bg-primary text-black border-primary shadow-primary/30'
                             : 'bg-white/5 border-white/10 text-white/60 hover:border-white/20 hover:bg-white/10'
                             }`}
                         >
@@ -386,7 +409,7 @@ export default function Aventures() {
                     )}
                   </div>
                   {formData.cityIds.length === 3 && (
-                    <p className="text-[9px] text-[#00ed64] font-bold uppercase tracking-widest italic animate-pulse">Maximum 3 villes par itinéraire</p>
+                    <p className="text-[9px] text-primary font-bold uppercase tracking-widest italic animate-pulse">Maximum 3 villes par itinéraire</p>
                   )}
                 </div>
               )}
@@ -397,18 +420,18 @@ export default function Aventures() {
               <section className="bg-[#0c1a0c] border border-white/5 rounded-[2.5rem] p-8 space-y-8 animate-in fade-in slide-in-from-left-4 duration-500 h-full flex flex-col">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Calendar className="text-[#00ed64]" size={22} />
+                    <Calendar className="text-primary" size={22} />
                     <h2 className="text-xl font-black">Quand partez-vous ?</h2>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button onClick={() => changeMonth(-1)} className="p-2 hover:text-[#00ed64] transition-colors"><ChevronLeft size={20} strokeWidth={3} /></button>
-                    <button onClick={() => changeMonth(1)} className="p-2 hover:text-[#00ed64] transition-colors"><ChevronRight size={20} strokeWidth={3} /></button>
+                    <button onClick={() => changeMonth(-1)} className="p-2 hover:text-primary transition-colors"><ChevronLeft size={20} strokeWidth={3} /></button>
+                    <button onClick={() => changeMonth(1)} className="p-2 hover:text-primary transition-colors"><ChevronRight size={20} strokeWidth={3} /></button>
                   </div>
                 </div>
 
                 <div className="space-y-6 flex-1">
                   <div className="text-center">
-                    <p className="text-[10px] text-[#00ed64] uppercase font-black tracking-[0.3em] mb-1">
+                    <p className="text-[10px] text-primary uppercase font-black tracking-[0.3em] mb-1">
                       {calendarViewDate.toLocaleDateString('fr-FR', { year: 'numeric' })}
                     </p>
                     <h4 className="font-black italic text-2xl uppercase tracking-widest text-white">
@@ -427,7 +450,7 @@ export default function Aventures() {
                   <div className="pt-6 border-t border-white/5 flex items-center justify-between">
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Date sélectionnée</p>
-                      <p className="text-xs font-black italic text-[#00ed64]">
+                      <p className="text-xs font-black italic text-primary">
                         {formData.startDate ? new Date(formData.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '...'}
                         {formData.endDate ? ` — ${new Date(formData.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}` : ''}
                       </p>
@@ -447,7 +470,7 @@ export default function Aventures() {
                       type="checkbox"
                       checked={formData.isFlexible}
                       onChange={(e) => updateField('isFlexible', e.target.checked)}
-                      className="w-4 h-4 rounded border-white/10 bg-white/5 checked:bg-[#00ed64] transition-all"
+                      className="w-4 h-4 rounded border-white/10 bg-white/5 checked:bg-primary transition-all"
                     />
                     <span className="text-xs text-white/50 group-hover:text-white/70 transition-colors">Mes dates sont flexibles (+/- 3 jours)</span>
                   </label> */}
@@ -456,7 +479,7 @@ export default function Aventures() {
 
               <section className="bg-[#0c1a0c] border border-white/5 rounded-[2.5rem] p-8 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 h-full flex flex-col">
                 <div className="flex items-center gap-3">
-                  <Users className="text-[#00ed64]" size={22} />
+                  <Users className="text-primary" size={22} />
                   <h2 className="text-xl font-black">Voyageurs</h2>
                 </div>
                 <div className="space-y-6 flex-1">
@@ -479,7 +502,7 @@ export default function Aventures() {
                         <span className="text-2xl font-black min-w-[2rem] text-center">{item.count}</span>
                         <button
                           onClick={() => updateField(item.field, item.count + 1)}
-                          className="w-10 h-10 rounded-xl bg-[#00ed64] text-black flex items-center justify-center hover:scale-105 transition-all shadow-[0_0_15px_rgba(0,237,100,0.2)]"
+                          className="w-10 h-10 rounded-xl bg-primary shadow-primary/20"
                         >
                           <Plus size={18} />
                         </button>
@@ -488,8 +511,8 @@ export default function Aventures() {
                   ))}
                 </div>
 
-                <div className="bg-[#00ed64]/5 border border-[#00ed64]/10 rounded-[2rem] p-6 space-y-2 mt-auto">
-                  <p className="text-[10px] text-[#00ed64] uppercase font-black tracking-widest italic">Note de l'Assistant</p>
+                <div className="bg-primary/5 border-primary/10 rounded-[2rem] p-6 space-y-2 mt-auto">
+                  <p className="text-[10px] text-primary uppercase font-black tracking-widest italic">Note de l'Assistant</p>
                   <p className="text-xs text-white/60 leading-relaxed italic">
                     Pour les familles, nous sélectionnons des logements avec des équipements adaptés aux enfants.
                   </p>
@@ -502,15 +525,15 @@ export default function Aventures() {
             <>
               <section className="bg-[#0c1a0c] border border-white/5 rounded-[2rem] p-6 md:p-10 space-y-8">
                 <div className="flex items-center gap-3">
-                  <Heart className="text-[#00ed64]" size={22} fill="#00ed64" />
+                  <Heart className="text-primary" size={22} fill="currentColor" />
                   <h2 className="text-xl font-bold">Qu'est-ce qui vous fait vibrer ?</h2>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                   {interests.map((interest) => (
                     <button onClick={() => toggleInterest(interest.id)} key={interest.id}
 
-                      className={`bg-white/5 border ${formData.interests.includes(interest.id) ? 'border-[#00ed64]' : 'border-white/5'} rounded-2xl p-6 flex flex-col items-center justify-center gap-4  hover:border-[#00ed64]/30 hover:bg-[#00ed64]/5 transition-all group}`}>
-                      <div className="text-white/40 group-hover:text-[#00ed64] transition-colors">{interest.icon}</div>
+                      className={`bg-white/5 border ${formData.interests.includes(interest.id) ? 'border-primary' : 'border-white/5'} rounded-2xl p-6 flex flex-col items-center justify-center gap-4  hover:border-primary/30 hover:bg-primary/5 transition-all group}`}>
+                      <div className="text-white/40 group-hover:text-primary transition-colors">{interest.icon}</div>
                       <span className="text-xs font-semibold text-white/60 group-hover:text-white transition-colors">{interest.label}</span>
                     </button>
                   ))}
@@ -520,10 +543,10 @@ export default function Aventures() {
               <section className="bg-[#0c1a0c] border border-white/5 rounded-[2rem] p-6 md:p-10 space-y-10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Sparkles className="text-[#00ed64]" size={22} />
+                    <Sparkles className="text-primary" size={22} />
                     <h2 className="text-xl font-bold">Quel est votre budget ?</h2>
                   </div>
-                  <span className="text-[#00ed64] font-bold text-sm tracking-wide">{getBudgetLabel()}</span>
+                  <span className="text-primary font-bold text-sm tracking-wide">{getBudgetLabel()}</span>
                 </div>
 
                 <div className="px-2">
@@ -533,7 +556,7 @@ export default function Aventures() {
                     max="100"
                     value={formData.budget}
                     onChange={(e) => updateField('budget', parseInt(e.target.value))}
-                    className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#00ed64]"
+                    className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary"
                   />
                   <div className="flex justify-between mt-4 text-[10px] uppercase tracking-widest font-black text-white/20">
                     <span>Économique</span>
@@ -544,7 +567,7 @@ export default function Aventures() {
 
                 <div className="bg-white/5 rounded-2xl p-5 flex gap-4 border border-white/5">
                   <div className="w-10 h-10 rounded-full bg-[#00ed64]/10 flex items-center justify-center shrink-0">
-                    <Info className="text-[#00ed64]" size={18} />
+                    <Info className="text-primary" size={18} />
                   </div>
                   <p className="text-xs text-[#a3b1a3] leading-relaxed">
                     Un budget modéré inclut généralement des hôtels 3-4 étoiles, des activités guidées et des repas dans des restaurants locaux de qualité.
@@ -566,8 +589,16 @@ export default function Aventures() {
 
             <button
               onClick={step === 3 ? handleGenerate : nextStep}
-              className="flex-1 bg-[#00ed64] text-[#050f05] py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:shadow-[0_0_30px_rgba(0,237,100,0.4)] transition-all hover:scale-[1.02] active:scale-95 group">
-              {step === 3 ? "Générer mon itinéraire" : "Suivant"}
+              disabled={step === 1 && formData.countryId !== "" && (formData.countryId !== "1" && Number(formData.countryId) !== 1)}
+              className={`flex-1 py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 group ${step === 1 && formData.countryId !== "" && (formData.countryId !== "1" && Number(formData.countryId) !== 1)
+                  ? "bg-white/5 text-white/20 cursor-not-allowed border border-white/5"
+                  : "bg-[#00ed64] text-[#050f05] hover:shadow-[0_0_30px_rgba(0,237,100,0.4)]"
+                }`}>
+              {step === 1 && formData.countryId !== "" && (formData.countryId !== "1" && Number(formData.countryId) !== 1)
+                ? "Bientôt disponible"
+                : step === 3
+                  ? "Générer mon itinéraire"
+                  : "Suivant"}
               <ArrowRight size={22} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

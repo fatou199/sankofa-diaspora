@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import { History, Compass, Heart, Globe, ArrowDown, MapPin, Sparkles, BookOpen } from "lucide-react";
 import Link from "next/link";
+import Footer from "@/components/Footer";
 
 export default function About() {
     return (
@@ -54,11 +55,12 @@ export default function About() {
                                 <div className="w-8 h-[2px] bg-[#00ed64]" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#a3b1a3]">L'Origine du Nom</span>
                             </div>
-                            <h2 className="text-3xl md:text-5xl font-black italic text-white">Sankofa : <br />Le Passé Éclairé.</h2>
+                            <h2 className="text-3xl md:text-5xl font-black italic text-white">Aliniosié</h2>
                             <p className="text-base md:text-lg text-white/60 leading-relaxed font-medium">
-                                Dans la tradition Akan, l'Oiseau Sankofa vole vers l'avant tout en regardant vers l'arrière, tenant un œuf précieux dans son bec.
-                                <br /><br />
-                                Ce n'est pas une simple icône. C'est une philosophie : <span className="text-white font-bold italic">récupérer ce qui a été oublié</span> pour fertiliser le présent. Sankofa Diaspora est né de cette sagesse ancienne.
+                            À <strong>Kani, mon village au nord de la Côte d’Ivoire</strong>, nous disons “Aliniosié” pour évoquer le retour aux sources.
+                            <br /><br />
+                            Un jour, j’ai posé une question simple à ma mère, et sa réponse est devenue bien plus qu’une traduction. 
+                            C’est devenu une direction : revenir vers ses racines pour mieux construire le futur.
                             </p>
                         </div>
                     </div>
@@ -84,8 +86,8 @@ export default function About() {
                             <div className="glass-effect p-8 rounded-[2.5rem] border-[#00ed64]/20 bg-[#00ed64]/5 space-y-4">
                                 <h4 className="text-[#00ed64] font-black italic text-lg uppercase tracking-widest">L'Engagement</h4>
                                 <p className="text-white/60 leading-relaxed text-base">
-                                    Nous l'avons créée pour que personne ne se sente étranger sur sa propre terre.
-                                    Notre mission est de démocratiser le retour aux racines en offrant un compagnon intelligent pour votre reconnexion.
+                                    Nous avons créé Aliniosié pour vous donner les repères nécessaires à votre voyage. 
+                                    Notre mission est de simplifier ce retour en offrant un outil qui vous aide à naviguer et à vous réapproprier votre héritage, étape par étape.
                                 </p>
                             </div>
                         </div>
@@ -151,10 +153,10 @@ export default function About() {
                         </h2>
                         <div className="text-lg md:text-xl text-white/50 font-medium space-y-6 leading-relaxed italic">
                             <p>
-                                "Nous sommes les plumes de l'Oiseau Sankofa."
+                                "Chaque voyage vers ses racines est un chemin de connexion unique."
                             </p>
                             <p className="font-sans not-italic text-base opacity-80">
-                                Chaque itinéraire généré et chaque racine retrouvée ajoute une plume à cette force collective. Nous documentons une reconnexion historique.
+                                Chaque itinéraire généré et chaque racine retrouvée ajoute une plume à cette force collective.
                             </p>
                         </div>
                         <div className="pt-8">
@@ -168,18 +170,7 @@ export default function About() {
                 </section>
             </main>
 
-            {/* Narrative Footer */}
-            <footer className="py-16 border-t border-white/5 bg-[#0c1a0c]/50 text-center px-6">
-                <div className="max-w-7xl mx-auto space-y-8">
-                    <div className="text-[#00ed64] font-black text-xl tracking-tighter italic">Sankofa Diaspora</div>
-                    <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.5em] max-w-lg mx-auto leading-loose">
-                        Un héritage à protéger. Un futur à explorer.
-                    </p>
-                    <div className="pt-6 text-white/10 text-[9px] font-bold uppercase tracking-widest">
-                        &copy; {new Date().getFullYear()} • Votre histoire commence ici.
-                    </div>
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 }

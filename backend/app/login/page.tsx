@@ -34,7 +34,12 @@ export default function LoginPage() {
             }
 
             localStorage.setItem("token", data.token);
-            router.push("/profil");
+
+            // Gestion de la redirection après connexion
+            const searchParams = new URLSearchParams(window.location.search);
+            const redirectPath = searchParams.get("redirect") || "/profil";
+
+            router.push(redirectPath);
         } catch (error: any) {
             setError(error.message || "Erreur de connexion");
         }
@@ -63,7 +68,7 @@ export default function LoginPage() {
                         <div className="w-10 h-10 bg-[#00ed64] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,237,100,0.5)] transform rotate-6">
                             <div className="w-5 h-5 bg-black rounded-sm rotate-45" />
                         </div>
-                        <span className="text-2xl font-black text-white tracking-tighter uppercase italic">Sankofa Diaspora</span>
+                        <span className="text-2xl font-black text-white tracking-tighter uppercase italic">Aliniosié</span>
                     </div>
 
                     <div className="space-y-6 max-w-lg">
@@ -99,7 +104,7 @@ export default function LoginPage() {
 
                 <div className="absolute bottom-12 left-24 z-10">
                     <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">
-                        © 2026 Sankofa Diaspora.
+                        © 2026 Aliniosié.
                     </p>
                 </div>
             </div>
@@ -130,7 +135,7 @@ export default function LoginPage() {
                         <div className="space-y-3">
                             <div className="flex justify-between items-center ml-1">
                                 <label className="text-[10px] uppercase tracking-widest font-black text-[#a3b1a3]">Mot de passe</label>
-                                <Link href="#" className="text-[10px] font-black text-[#00ed64] hover:text-white transition-all underline decoration-[#00ed64]/30 underline-offset-4">Oublié ?</Link>
+                                {/* <Link href="#" className="text-[10px] font-black text-[#00ed64] hover:text-white transition-all underline decoration-[#00ed64]/30 underline-offset-4">Oublié ?</Link> */}
                             </div>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00ed64] transition-colors" size={18} />
@@ -200,7 +205,7 @@ export default function LoginPage() {
 
                         <div className="text-center pt-2">
                             <p className="text-xs text-[#a3b1a3] font-medium">
-                                Nouveau sur Sankofa ?{" "}
+                                Nouveau sur Aliniosié ?{" "}
                                 <Link href="/register" className="text-[#00ed64] font-black hover:underline tracking-tight">
                                     Créer un profil membre
                                 </Link>

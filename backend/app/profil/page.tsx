@@ -16,19 +16,32 @@ import {
     ChevronRight,
     ChevronLeft,
     LayoutDashboard,
-    Users
+    Users,
+    Search,
+    ChevronDown,
+    Menu,
+    X
 } from "lucide-react";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { User } from "@prisma/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/app/components/Navbar";
 
-
-export default function ProfilPage() {
+function ProfilContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState("À venir"); // For the Trips internal tabs
     const [activeSection, setActiveSection] = useState("Accueil"); // Main Sidebar sections
+
+    // Sync with query params for navigation from mobile menu
+    useEffect(() => {
+        const section = searchParams.get('section');
+        if (section) {
+            setActiveSection(section);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [searchParams]);
 
     const [user, setUser] = useState<User | any>(null);
     const [voyages, setVoyages] = useState<any[]>([]);
@@ -311,9 +324,9 @@ export default function ProfilPage() {
                     }}
                     className={`w-9 h-9 rounded-full flex items-center justify-center mx-auto text-sm transition-all relative ${isPast ? "text-white/20 cursor-not-allowed" :
                         isStart || isEnd
-                            ? "bg-[#00ed64] text-black font-black z-10 shadow-[0_0_15px_rgba(0,237,100,0.4)]"
+                            ? "bg-primary text-black font-black z-10 shadow-primary/20"
                             : isInRange
-                                ? "bg-[#00ed64]/20 text-[#00ed64]"
+                                ? "bg-primary/20 text-primary"
                                 : "hover:bg-white/10"
                         }`}
                 >
@@ -339,26 +352,46 @@ export default function ProfilPage() {
 
     const handleDeleteVoyage = async (id: number) => {
         if (confirm("Voulez-vous vraiment supprimer ce voyage ?")) {
-            setVoyages(prev => prev.filter(v => v.id !== id));
-            // Integration API logic would go here
+            try {
+                const token = localStorage.getItem("token");
+                const response = await fetch(`/api/itineraries/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erreur lors de la suppression du voyage");
+                }
+
+            } catch (error: any) {
+                console.error("Erreur suppression:", error);
+                alert(error.message || "Une erreur est survenue lors de la suppression.");
+            }
         }
     };
 
     return (
-        <>
+        <div className="bg-background min-h-screen text-white font-sans selection:bg-primary/30">
             <Navbar />
-            <div className="bg-[#050f05] h-screen pt-[72px] text-white font-sans flex overflow-hidden">
 
-                {/* Sidebar */}
-                <aside className="w-[280px] bg-[#0c1a0c]/80 backdrop-blur-xl border-r border-white/5 flex flex-col p-8 hidden lg:flex">
-                    <div className="flex items-center gap-3 mb-12">
-                        <div className="w-10 h-10 bg-[#00ed64]/20 rounded-xl flex items-center justify-center border border-[#00ed64]/30">
-                            <div className="w-5 h-5 bg-[#00ed64] rounded-sm rotate-45" />
+            {/* MOBILE ONLY GREETING (Shown before everything else on small screens) */}
+            <div className="lg:hidden bg-[#050f05] pt-32 pb-8 border-b border-white/5 px-6">
+                <div className="flex items-center gap-2 text-primary mb-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Tableau de Bord</p>
+                </div>
+                <h1 className="text-3xl font-black italic tracking-tight">Bon retour, {user?.firstName} 👋</h1>
+            </div>
+
+            <div className="flex flex-col lg:flex-row lg:h-screen lg:pt-20">
+                <aside className="hidden lg:flex w-80 bg-[#0c1a0c] border-r border-white/5 flex-col p-8 gap-12 sticky top-0 h-screen overflow-y-auto">
+                    <div className="flex items-center gap-3 px-2">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                            <LayoutDashboard className="text-primary" size={20} />
                         </div>
-                        <div>
-                            <p className="font-black text-lg leading-none">Sankofa Diaspora</p>
-                            <p className="text-[10px] text-[#a3b1a3] uppercase font-bold tracking-widest mt-1">Explorez le continent</p>
-                        </div>
+                        <h1 className="text-xl font-black italic">Dashboard</h1>
                     </div>
 
                     <nav className="space-y-2 flex-1">
@@ -372,7 +405,7 @@ export default function ProfilPage() {
                                 key={idx}
                                 onClick={() => setActiveSection(item.label)}
                                 className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all ${activeSection === item.label
-                                    ? 'bg-[#00ed64]/10 text-[#00ed64] border border-[#00ed64]/20 font-bold'
+                                    ? 'bg-primary/10 text-primary border border-primary/20 font-bold'
                                     : 'text-[#a3b1a3] hover:text-white hover:bg-white/5'
                                     }`}
                             >
@@ -388,17 +421,38 @@ export default function ProfilPage() {
                     </button>
                 </aside>
 
-                {/* Main Content Area */}
-                <main className="flex-1 overflow-y-auto px-6 md:px-12 py-10">
+                <main className="flex-1 overflow-y-auto px-4 md:px-12 py-8 md:py-10">
+                    {/* DESKTOP ONLY HEADER */}
+                    <div className="hidden lg:block mb-10">
+                        <h1 className="text-4xl font-black tracking-tight mb-2 italic">Bon retour, {user?.firstName} 👋</h1>
+                        <p className="text-[#a3b1a3] font-medium opacity-60">Heureux de vous revoir sur votre espace personnel. Prête pour une nouvelle mission ?</p>
+                    </div>
 
-                    {/* Header Section */}
-                    <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-                        <div>
-                            <h1 className="text-4xl font-black tracking-tight mb-2">Bon retour, {user?.firstName} 👋</h1>
-                            <p className="text-[#a3b1a3] text-lg font-medium">Prête pour votre prochaine aventure africaine ?</p>
-                        </div>
-                        {/* Le bouton redondant a été supprimé ici car il est déjà présent dans la sidebar */}
-                    </header>
+                    {/* MOBILE NAVIGATION PILLS */}
+                    <div className="lg:hidden grid grid-cols-2 gap-3 mb-10">
+                        {[
+                            { label: "Accueil", icon: <Home size={18} /> },
+                            { label: "Voyages", icon: <Bookmark size={18} />, target: "Voyages enregistrés" },
+                            { label: "Planifier", icon: <MapIcon size={18} />, target: "Planifier un voyage" },
+                            { label: "Paramètres", icon: <UserIcon size={18} />, target: "Profil & Paramètres" }
+                        ].map((item) => {
+                            const target = item.target || item.label;
+                            const isActive = activeSection === target;
+                            return (
+                                <button
+                                    key={item.label}
+                                    onClick={() => setActiveSection(target)}
+                                    className={`flex items-center gap-3 p-4 rounded-2xl border transition-all ${isActive
+                                            ? 'bg-primary/10 border-primary/30 text-primary shadow-primary/20'
+                                            : 'bg-white/5 border-white/5 text-white/50'
+                                        }`}
+                                >
+                                    <div className={isActive ? 'text-primary' : ''}>{item.icon}</div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
 
                     {/* Conditional Rendering based on activeSection */}
 
@@ -410,14 +464,14 @@ export default function ProfilPage() {
                                 {/* Main Profile Card */}
                                 <div className="xl:col-span-8 bg-[#0c1a0c] border border-white/5 rounded-[2.5rem] p-8 md:p-10 flex flex-col md:flex-row items-center gap-10">
                                     <div className="relative">
-                                        <div className="w-32 h-32 rounded-full border-4 border-[#00ed64] p-1">
+                                        <div className="w-32 h-32 rounded-full border-4 border-primary p-1">
                                             <img
                                                 src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop"
                                                 alt="Profile Avatar"
                                                 className="w-full h-full rounded-full object-cover"
                                             />
                                         </div>
-                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#00ed64] text-black text-[9px] font-black px-2 py-0.5 rounded-full border-2 border-[#0c1a0c] uppercase">
+                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-primary text-black text-[9px] font-black px-2 py-0.5 rounded-full border-2 border-[#0c1a0c] uppercase">
                                             LVL 3
                                         </div>
                                     </div>
@@ -427,7 +481,7 @@ export default function ProfilPage() {
                                             <h2 className="text-3xl font-black">{user?.firstName} {user?.lastName}</h2>
                                             <p className="text-[#a3b1a3] font-bold">Exploratrice passionnée</p>
                                             <div className="flex items-center justify-center md:justify-start gap-1 text-[#a3b1a3] text-sm">
-                                                <MapPin size={14} className="text-[#00ed64]" /> Dakar, Sénégal
+                                                <MapPin size={14} className="text-primary" /> Dakar, Sénégal
                                             </div>
                                         </div>
 
@@ -453,7 +507,7 @@ export default function ProfilPage() {
                                             <h3 className="text-lg font-black">Votre Carte de <br /> Voyage</h3>
                                             <button
                                                 onClick={() => handleActionPlaceholder("Voir la carte en grand")}
-                                                className="text-[10px] font-black uppercase tracking-widest text-[#00ed64] flex items-center gap-1 hover:underline"
+                                                className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1 hover:underline"
                                             >
                                                 Voir en grand <ChevronRight size={10} />
                                             </button>
@@ -467,10 +521,10 @@ export default function ProfilPage() {
                                         </div>
 
                                         <div className="flex items-center gap-3 relative z-10">
-                                            <div className="flex-1 bg-[#0b2b0b] border border-[#00ed64]/20 rounded-xl p-3 flex items-center justify-between">
+                                            <div className="flex-1 bg-[#0b2b0b] border border-primary/20 rounded-xl p-3 flex items-center justify-between">
                                                 <span className="text-[10px] font-black text-[#a3b1a3] uppercase">Visités</span>
                                                 <span className="flex items-center gap-1.5 text-sm font-black">
-                                                    <div className="w-2 h-2 rounded-full bg-[#00ed64]" /> {countriesVisited}
+                                                    <div className="w-2 h-2 rounded-full bg-primary" /> {countriesVisited}
                                                 </span>
                                             </div>
                                             <div className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between">
@@ -486,13 +540,13 @@ export default function ProfilPage() {
                             {/* Summary Widget */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <div className="bg-[#0c1a0c] p-8 rounded-[2rem] border border-white/5 space-y-4">
-                                    <Diamond size={32} className="text-[#00ed64]" />
+                                    <Diamond size={32} className="text-primary" />
                                     <h3 className="text-xl font-black">Points Privilège</h3>
                                     <p className="text-4xl font-black">1,250 <span className="text-sm text-[#a3b1a3] font-bold">XP</span></p>
                                     <p className="text-xs text-[#a3b1a3]">Expert Voyageur (Niveau 3)</p>
                                 </div>
                                 <div className="bg-[#0c1a0c] p-8 rounded-[2rem] border border-white/5 space-y-4">
-                                    <Calendar size={32} className="text-[#00ed64]" />
+                                    <Calendar size={32} className="text-primary" />
                                     <h3 className="text-xl font-black">Prochain voyage</h3>
                                     <p className="text-2xl font-black">{nextTrip ? (nextTrip.preferences || "Voyage sans titre") : "Aucun départ"}</p>
                                     <p className="text-xs text-[#a3b1a3]">
@@ -501,7 +555,7 @@ export default function ProfilPage() {
                                             : "Planifiez votre prochain voyage !"}
                                     </p>
                                 </div>
-                                <div className="bg-[#00ed64] p-8 rounded-[2rem] text-black space-y-4 relative overflow-hidden group cursor-pointer">
+                                <div className="bg-primary p-8 rounded-[2rem] text-black space-y-4 relative overflow-hidden group cursor-pointer">
                                     <Share2 size={32} />
                                     <h3 className="text-xl font-black">Parrainez un ami</h3>
                                     <p className="text-sm font-bold">Gagnez 500 XP pour chaque ami qui s'inscrit.</p>
@@ -519,7 +573,7 @@ export default function ProfilPage() {
                                 <h3 className="text-2xl font-black mb-6">Conseils personnalisés</h3>
                                 <div className="space-y-4">
                                     <div className="p-4 bg-white/5 rounded-2xl flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-[#00ed64]/10 rounded-xl flex items-center justify-center text-[#00ed64] font-black">!</div>
+                                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black">!</div>
                                         <p className="text-sm">Votre visa pour le **Ghana** est-il prêt ? Pensez à vérifier les délais.</p>
                                     </div>
                                     <div className="p-4 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 font-black">?</div>
@@ -535,7 +589,7 @@ export default function ProfilPage() {
                             {/* Modern Progress Bar */}
                             <div className="flex h-1.5 w-full bg-white/5">
                                 <div
-                                    className="bg-[#00ed64] transition-all duration-700 shadow-[0_0_15px_rgba(0,237,100,0.5)]"
+                                    className="bg-primary transition-all duration-700 shadow-[0_0_15px_rgba(0,237,100,0.5)]"
                                     style={{ width: `${(wizardStep + 1) * 25}%` }}
                                 />
                             </div>
@@ -551,7 +605,7 @@ export default function ProfilPage() {
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#0c1a0c] via-[#0c1a0c]/20 to-transparent" />
                                         <div className="absolute bottom-12 left-10 right-10 space-y-6">
-                                            <div className="w-16 h-16 bg-[#00ed64] rounded-2xl flex items-center justify-center shadow-lg transform -rotate-6">
+                                            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg transform -rotate-6">
                                                 <MapIcon size={32} className="text-black" />
                                             </div>
                                             <h2 className="text-5xl font-black leading-tight italic">Votre héritage vous attend.</h2>
@@ -566,7 +620,7 @@ export default function ProfilPage() {
                                         <div className="space-y-10">
                                             <div className="flex justify-between items-center">
                                                 <div>
-                                                    <p className="text-[10px] text-[#00ed64] uppercase font-black tracking-[0.3em] mb-2">Étape 01</p>
+                                                    <p className="text-[10px] text-primary uppercase font-black tracking-[0.3em] mb-2">Étape 01</p>
                                                     <h3 className="text-3xl font-black">Choisissez votre destination</h3>
                                                 </div>
                                                 <button onClick={() => setActiveSection("Accueil")} className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -575,30 +629,38 @@ export default function ProfilPage() {
                                             </div>
 
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-4 custom-scrollbar">
-                                                {countries.map((c) => (
-                                                    <button
-                                                        key={c.name}
-                                                        onClick={() => {
-                                                            setPlanningCountry(c.name);
-                                                            setPlanningCityIds([]);
-                                                        }}
-                                                        className={`text-left p-6 rounded-[2rem] border transition-all relative overflow-hidden group/card ${planningCountry === c.name
-                                                            ? "bg-[#00ed64]/10 border-[#00ed64]/40"
-                                                            : "bg-white/5 border-transparent hover:border-white/10 hover:bg-white/[0.08]"
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-center gap-4 relative z-10">
-                                                            <span className="text-3xl filter grayscale group-hover/card:grayscale-0 transition-all">{c.flag || "🌍"}</span>
-                                                            <div>
-                                                                <span className="font-black text-lg block">{c.name}</span>
-                                                                <span className="text-[10px] text-[#a3b1a3] font-bold uppercase tracking-widest">{c.cities?.length || 0} destinations</span>
+                                                {countries.map((c) => {
+                                                    const isAvailable = c.id === 1 || c.name === "Côte d'Ivoire";
+                                                    return (
+                                                        <button
+                                                            key={c.name}
+                                                            disabled={!isAvailable}
+                                                            onClick={() => {
+                                                                if (!isAvailable) return;
+                                                                setPlanningCountry(c.name);
+                                                                setPlanningCityIds([]);
+                                                            }}
+                                                            className={`text-left p-6 rounded-[2rem] border transition-all relative overflow-hidden group/card ${!isAvailable ? "opacity-40 grayscale cursor-not-allowed" :
+                                                                planningCountry === c.name
+                                                                    ? "bg-primary/10 border-primary/40"
+                                                                    : "bg-white/5 border-transparent hover:border-white/10 hover:bg-white/[0.08]"
+                                                                }`}
+                                                        >
+                                                            <div className="flex items-center gap-4 relative z-10">
+                                                                <span className="text-3xl filter grayscale group-hover/card:grayscale-0 transition-all">{c.flag || "🌍"}</span>
+                                                                <div>
+                                                                    <span className="font-black text-lg block">{c.name}</span>
+                                                                    <span className="text-[10px] text-[#a3b1a3] font-bold uppercase tracking-widest leading-none">
+                                                                        {isAvailable ? `${c.cities?.length || 0} destinations` : "Bientôt disponible"}
+                                                                    </span>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        {planningCountry === c.name && (
-                                                            <div className="absolute right-6 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#00ed64] rounded-full shadow-[0_0_15px_rgba(0,237,100,0.8)]" />
-                                                        )}
-                                                    </button>
-                                                ))}
+                                                            {planningCountry === c.name && (
+                                                                <div className="absolute right-6 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-[0_0_15px_rgba(0,237,100,0.8)]" />
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
 
                                             {/* City Selection Overlay/Section */}
@@ -606,7 +668,7 @@ export default function ProfilPage() {
                                                 <div className="space-y-6 pt-6 animate-in fade-in slide-in-from-top-4 duration-500 border-t border-white/5">
                                                     <div className="flex justify-between items-center text-white/40">
                                                         <div className="flex items-center gap-2">
-                                                            <MapPin size={16} className="text-[#00ed64]" />
+                                                            <MapPin size={16} className="text-primary" />
                                                             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Escales recommandées au {planningCountry}</span>
                                                         </div>
                                                         <span className="text-[10px] font-black bg-white/5 px-3 py-1 rounded-full text-white/60 uppercase">
@@ -627,7 +689,7 @@ export default function ProfilPage() {
                                                                         });
                                                                     }}
                                                                     className={`px-6 py-3 rounded-full text-[11px] font-black uppercase tracking-widest transition-all border ${isSelected
-                                                                        ? 'bg-[#00ed64] text-black border-[#00ed64] shadow-[0_0_25px_rgba(0,237,100,0.4)]'
+                                                                        ? 'bg-primary text-black font-black shadow-primary/30'
                                                                         : 'bg-white/5 border-white/10 text-white/40 hover:border-white/30 hover:text-white'
                                                                         }`}
                                                                 >
@@ -643,7 +705,7 @@ export default function ProfilPage() {
                                         <button
                                             disabled={!planningCountry || (planningCityIds?.length || 0) === 0}
                                             onClick={nextWizardStep}
-                                            className="mt-12 bg-[#00ed64] text-black w-full py-6 rounded-2xl font-black uppercase tracking-[0.3em] text-sm hover:shadow-[0_0_50px_rgba(0,237,100,0.4)] disabled:opacity-20 disabled:grayscale transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                                            className="mt-12 bg-primary text-black w-full py-6 rounded-2xl font-black uppercase tracking-[0.3em] text-sm hover:shadow-[0_0_50px_rgba(0,237,100,0.4)] disabled:opacity-20 disabled:grayscale transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                                         >
                                             Étape Suivante <ChevronRight size={22} strokeWidth={3} />
                                         </button>
@@ -653,10 +715,10 @@ export default function ProfilPage() {
                                 <div className="flex flex-col md:flex-row flex-1">
                                     {/* Left Side: Interactive Calendar */}
                                     <div className="w-full md:w-[40%] bg-[#050f05] p-10 md:p-16 flex flex-col justify-center border-r border-white/5 space-y-10 relative overflow-hidden">
-                                        <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-[#00ed64]/5 rounded-full blur-3xl" />
+                                        <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
 
                                         <div className="space-y-4 relative z-10">
-                                            <p className="text-[10px] text-[#00ed64] uppercase font-black tracking-[0.3em]">Étape 02</p>
+                                            <p className="text-[10px] text-primary uppercase font-black tracking-[0.3em]">Étape 02</p>
                                             <h3 className="text-4xl font-black italic">Logistique & Dates</h3>
                                             <p className="text-[#a3b1a3] font-medium leading-relaxed">
                                                 Définissez la temporalité de votre mission et la composition de votre délégation.
@@ -668,7 +730,7 @@ export default function ProfilPage() {
                                                 <button onClick={() => changeMonth(-1)} className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center transition-colors">
                                                     <ChevronLeft size={20} strokeWidth={3} />
                                                 </button>
-                                                <h4 className="font-black italic text-lg uppercase tracking-widest text-[#00ed64]">
+                                                <h4 className="font-black italic text-lg uppercase tracking-widest text-primary">
                                                     {calendarViewDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                                                 </h4>
                                                 <button onClick={() => changeMonth(1)} className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center transition-colors">
@@ -687,14 +749,14 @@ export default function ProfilPage() {
                                             <div className="pt-6 border-t border-white/5 flex justify-between items-center">
                                                 <div className="space-y-1">
                                                     <p className="text-[9px] font-black text-[#a3b1a3] uppercase tracking-widest">Durée</p>
-                                                    <p className="font-black text-[#00ed64] text-xl italic">
+                                                    <p className="font-black text-primary text-xl italic">
                                                         {travelStartDate && travelEndDate
                                                             ? `${Math.ceil((new Date(travelEndDate).getTime() - new Date(travelStartDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} JOURS`
                                                             : "--"}
                                                     </p>
                                                 </div>
-                                                <div className="w-12 h-12 bg-[#00ed64]/10 rounded-2xl flex items-center justify-center">
-                                                    <Calendar size={24} className="text-[#00ed64]" />
+                                                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                                    <Calendar size={24} className="text-primary" />
                                                 </div>
                                             </div>
                                         </div>
@@ -712,9 +774,9 @@ export default function ProfilPage() {
 
                                             <div className="space-y-6">
                                                 {/* Adults Counter */}
-                                                <div className="bg-white/[0.03] border border-white/5 p-8 rounded-[2rem] flex items-center justify-between group hover:border-[#00ed64]/20 transition-all shadow-lg">
+                                                <div className="bg-white/[0.03] border border-white/5 p-8 rounded-[2rem] flex items-center justify-between group hover:border-primary/20 transition-all shadow-lg">
                                                     <div className="flex items-center gap-6">
-                                                        <div className="w-16 h-16 rounded-2xl bg-[#00ed64]/10 flex items-center justify-center text-[#00ed64]">
+                                                        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                                                             <UserIcon size={32} />
                                                         </div>
                                                         <div>
@@ -732,7 +794,7 @@ export default function ProfilPage() {
                                                         <span className="text-3xl font-black min-w-[2.5rem] text-center">{adultCount}</span>
                                                         <button
                                                             onClick={() => setAdultCount(adultCount + 1)}
-                                                            className="w-12 h-12 rounded-xl bg-[#00ed64] text-black flex items-center justify-center hover:shadow-[0_0_20px_rgba(0,237,100,0.4)] transition-all"
+                                                            className="w-12 h-12 rounded-xl bg-primary text-black flex items-center justify-center hover:shadow-[0_0_20px_rgba(0,237,100,0.4)] transition-all"
                                                         >
                                                             <Plus size={20} strokeWidth={3} />
                                                         </button>
@@ -740,9 +802,9 @@ export default function ProfilPage() {
                                                 </div>
 
                                                 {/* Children Counter */}
-                                                <div className="bg-white/[0.03] border border-white/5 p-8 rounded-[2rem] flex items-center justify-between group hover:border-[#00ed64]/20 transition-all shadow-lg">
+                                                <div className="bg-white/[0.03] border border-white/5 p-8 rounded-[2rem] flex items-center justify-between group hover:border-primary/20 transition-all shadow-lg">
                                                     <div className="flex items-center gap-6">
-                                                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-[#a3b1a3] group-hover:text-[#00ed64] group-hover:bg-[#00ed64]/10 transition-all">
+                                                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-[#a3b1a3] group-hover:text-primary group-hover:bg-primary/10 transition-all">
                                                             <Users size={32} />
                                                         </div>
                                                         <div>
@@ -760,7 +822,7 @@ export default function ProfilPage() {
                                                         <span className="text-3xl font-black min-w-[2.5rem] text-center">{childCount}</span>
                                                         <button
                                                             onClick={() => setChildCount(childCount + 1)}
-                                                            className="w-12 h-12 rounded-xl bg-[#00ed64] text-black flex items-center justify-center hover:shadow-[0_0_20px_rgba(0,237,100,0.4)] transition-all"
+                                                            className="w-12 h-12 rounded-xl bg-primary text-black flex items-center justify-center hover:shadow-[0_0_20px_rgba(0,237,100,0.4)] transition-all"
                                                         >
                                                             <Plus size={20} strokeWidth={3} />
                                                         </button>
@@ -769,10 +831,10 @@ export default function ProfilPage() {
 
                                                 <div
                                                     onClick={() => setIsFlexible(!isFlexible)}
-                                                    className={`p-8 rounded-[2rem] border transition-all cursor-pointer flex items-center justify-between group overflow-hidden relative ${isFlexible ? "bg-[#00ed64]/10 border-[#00ed64]/40" : "bg-white/[0.02] border-white/5 hover:border-white/10"}`}
+                                                    className={`p-8 rounded-[2rem] border transition-all cursor-pointer flex items-center justify-between group overflow-hidden relative ${isFlexible ? "bg-primary/10 border-primary/40" : "bg-white/[0.02] border-white/5 hover:border-white/10"}`}
                                                 >
                                                     <div className="flex items-center gap-6 relative z-10">
-                                                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${isFlexible ? "bg-[#00ed64] border-[#00ed64]" : "border-white/20 group-hover:border-white/40"}`}>
+                                                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${isFlexible ? "bg-primary border-primary" : "border-white/20 group-hover:border-white/40"}`}>
                                                             {isFlexible && <Plus size={18} className="text-black rotate-45" strokeWidth={3} />}
                                                         </div>
                                                         <span className="font-black text-sm uppercase tracking-widest text-[#a3b1a3] group-hover:text-white transition-colors">Mes dates sont flexibles (+/- 3 jours)</span>
@@ -784,7 +846,7 @@ export default function ProfilPage() {
                                         <button
                                             onClick={nextWizardStep}
                                             disabled={!travelStartDate || !travelEndDate}
-                                            className="mt-12 bg-[#00ed64] text-black w-full py-6 rounded-2xl font-black uppercase tracking-[0.3em] text-sm hover:shadow-[0_0_50px_rgba(0,237,100,0.4)] disabled:opacity-20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                                            className="mt-12 bg-primary text-black w-full py-6 rounded-2xl font-black uppercase tracking-[0.3em] text-sm hover:shadow-[0_0_50px_rgba(0,237,100,0.4)] disabled:opacity-20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                                         >
                                             Suivant <ChevronRight size={22} strokeWidth={3} />
                                         </button>
@@ -800,7 +862,7 @@ export default function ProfilPage() {
                                             alt="African Art"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#0c1a0c] via-transparent to-[#0c1a0c]/40" />
-                                        <div className="absolute top-12 left-10 p-4 bg-[#00ed64] text-black rounded-2xl transform -rotate-12 shadow-xl">
+                                        <div className="absolute top-12 left-10 p-4 bg-primary text-black rounded-2xl transform -rotate-12 shadow-xl">
                                             <Diamond size={32} fill="currentColor" />
                                         </div>
                                         <div className="absolute bottom-12 left-10 right-10">
@@ -819,37 +881,37 @@ export default function ProfilPage() {
                                                     <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
                                                 </button>
                                                 <div>
-                                                    <p className="text-[10px] text-[#00ed64] uppercase font-black tracking-[0.3em]">Étape 03</p>
+                                                    <p className="text-[10px] text-primary uppercase font-black tracking-[0.3em]">Étape 03</p>
                                                     <h3 className="text-3xl font-black italic">Centres d'Intérêt</h3>
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                                 {[
-                                                    { id: "GASTRONOMY", label: "Gastronomie", desc: "Saveurs ancestrales", icon: "🍴", color: "text-orange-400" },
-                                                    { id: "HISTORY", label: "Héritage", desc: "Histoire & Culture", icon: "🗿", color: "text-amber-600" },
-                                                    { id: "NATURE", label: "Safari & Nature", desc: "Terres sauvages", icon: "🦁", color: "text-emerald-500" },
-                                                    { id: "ART", label: "Art & Design", desc: "Vibrations créatives", icon: "🎨", color: "text-purple-400" },
-                                                    { id: "LEISURE", label: "Vie Nocturne", desc: "Rythmes urbains", icon: "🎷", color: "text-blue-400" },
-                                                    { id: "OTHER", label: "Bien-être", desc: "Sérénité & Esprit", icon: "🕯️", color: "text-rose-300" }
+                                                    { id: "CULTURE", label: "Culture & Artisanat", desc: "Héritage et marchés", icon: "🗿", color: "text-amber-600" },
+                                                    { id: "GASTRONOMY", label: "Gastronomie", desc: "Saveurs locales", icon: "🍴", color: "text-orange-400" },
+                                                    { id: "NATURE", label: "Nature", desc: "Terres sauvages", icon: "🦁", color: "text-emerald-500" },
+                                                    { id: "BEACH", label: "Relaxation", desc: "Sérénité lagunaire", icon: "🌴", color: "text-blue-400" },
+                                                    { id: "ADVENTURE", label: "Aventure", desc: "Exploration intense", icon: "🤠", color: "text-cyan-400" },
+                                                    { id: "PHOTOGRAPHY", label: "Photographie", desc: "Spots visuels", icon: "📸", color: "text-pink-400" }
                                                 ].map((item) => (
                                                     <button
                                                         key={item.id}
                                                         onClick={() => toggleInterest(item.id)}
-                                                        className={`group flex flex-col items-start p-8 rounded-[2.5rem] border transition-all duration-500 relative overflow-hidden ${selectedInterests.includes(item.id)
-                                                            ? "bg-[#00ed64]/10 border-[#00ed64]/30 scale-[1.02] shadow-2xl shadow-[#00ed64]/5"
+                                                        className={`group flex flex-col items-center text-center p-8 rounded-[2.5rem] border transition-all duration-500 relative overflow-hidden ${selectedInterests.includes(item.id)
+                                                            ? "bg-primary/10 border-primary/30 scale-[1.02] shadow-2xl shadow-[#00ed64]/5"
                                                             : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.05]"
                                                             }`}
                                                     >
-                                                        <div className={`text-4xl mb-6 transform group-hover:scale-110 transition-transform duration-500 ${selectedInterests.includes(item.id) ? "filter-none" : "grayscale opacity-50"}`}>
+                                                        <div className={`text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-500 ${selectedInterests.includes(item.id) ? "filter-none" : "grayscale opacity-50"}`}>
                                                             {item.icon}
                                                         </div>
                                                         <div className="relative z-10">
-                                                            <h4 className={`font-black text-lg ${selectedInterests.includes(item.id) ? "text-[#00ed64]" : "text-white/80"}`}>{item.label}</h4>
+                                                            <h4 className={`font-black text-lg ${selectedInterests.includes(item.id) ? "text-primary" : "text-white/80"}`}>{item.label}</h4>
                                                             <p className="text-[10px] text-[#a3b1a3] font-bold uppercase tracking-widest mt-1">{item.desc}</p>
                                                         </div>
                                                         {selectedInterests.includes(item.id) && (
-                                                            <div className="absolute top-6 right-6 w-3 h-3 bg-[#00ed64] rounded-full shadow-[0_0_15px_rgba(0,237,100,0.8)]" />
+                                                            <div className="absolute top-6 right-6 w-3 h-3 bg-primary rounded-full shadow-[0_0_15px_rgba(0,237,100,0.8)]" />
                                                         )}
                                                     </button>
                                                 ))}
@@ -860,7 +922,7 @@ export default function ProfilPage() {
                                             <button
                                                 onClick={nextWizardStep}
                                                 disabled={selectedInterests.length === 0}
-                                                className="bg-[#00ed64] text-black w-full py-6 rounded-2xl font-black uppercase tracking-[0.3em] text-sm hover:shadow-[0_0_50px_rgba(0,237,100,0.4)] disabled:opacity-20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                                                className="bg-primary text-black w-full py-6 rounded-2xl font-black uppercase tracking-[0.3em] text-sm hover:shadow-[0_0_50px_rgba(0,237,100,0.4)] disabled:opacity-20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                                             >
                                                 Finaliser l'analyse <ChevronRight size={22} strokeWidth={3} />
                                             </button>
@@ -878,27 +940,27 @@ export default function ProfilPage() {
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#0c1a0c] via-transparent to-transparent" />
                                         <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="w-32 h-32 rounded-full bg-[#00ed64]/20 backdrop-blur-xl border border-[#00ed64]/30 flex items-center justify-center animate-bounce-slow">
-                                                <Diamond size={48} className="text-[#00ed64]" fill="currentColor" />
+                                            <div className="w-32 h-32 rounded-full bg-primary/20 backdrop-blur-xl border border-primary/30 flex items-center justify-center animate-bounce-slow">
+                                                <Diamond size={48} className="text-primary" fill="currentColor" />
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="flex-1 p-12 md:p-20 flex flex-col justify-center space-y-12 bg-[#0c1a0c] relative">
                                         <div className="space-y-6 relative z-10">
-                                            <div className="inline-block px-4 py-1.5 rounded-full bg-[#00ed64]/10 border border-[#00ed64]/20 text-[#00ed64] font-black text-[10px] uppercase tracking-[0.3em] mb-4">
+                                            <div className="inline-block px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-[10px] uppercase tracking-[0.3em] mb-4">
                                                 Mission Configurée avec Succès
                                             </div>
-                                            <h2 className="text-5xl font-black leading-tight italic">Prêt pour l'aventure, <br /><span className="text-[#00ed64]">{user?.firstName}</span> !</h2>
+                                            <h2 className="text-5xl font-black leading-tight italic">Prêt pour l'aventure, <br /><span className="text-primary">{user?.firstName}</span> !</h2>
                                             <p className="text-[#a3b1a3] text-xl font-medium leading-relaxed max-w-lg">
                                                 Votre profil est synchronisé. Nos algorithmes préparent un itinéraire sur mesure pour votre retour aux sources.
                                             </p>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10">
-                                            <div className="bg-[#050f05]/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 space-y-6 hover:border-[#00ed64]/20 transition-all group">
+                                            <div className="bg-[#050f05]/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 space-y-6 hover:border-primary/20 transition-all group">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-2xl bg-[#00ed64]/10 flex items-center justify-center text-[#00ed64] group-hover:scale-110 transition-transform">
+                                                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                                         <MapPin size={24} />
                                                     </div>
                                                     <div>
@@ -916,9 +978,9 @@ export default function ProfilPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="bg-[#050f05]/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 space-y-6 hover:border-[#00ed64]/20 transition-all group">
+                                            <div className="bg-[#050f05]/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 space-y-6 hover:border-primary/20 transition-all group">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-2xl bg-[#00ed64]/10 flex items-center justify-center text-[#00ed64] group-hover:scale-110 transition-transform">
+                                                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                                         <Calendar size={24} />
                                                     </div>
                                                     <div>
@@ -929,7 +991,7 @@ export default function ProfilPage() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="px-3 py-1 bg-[#00ed64]/10 text-[#00ed64] rounded-lg text-[9px] font-black uppercase tracking-widest">
+                                                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[9px] font-black uppercase tracking-widest">
                                                         {adultCount} Adulte{adultCount > 1 ? 's' : ''}
                                                     </span>
                                                     {childCount > 0 && (
@@ -944,7 +1006,7 @@ export default function ProfilPage() {
                                         <div className="space-y-4 pt-6 relative z-10">
                                             <button
                                                 onClick={handleSaveTrip}
-                                                className="w-full bg-[#00ed64] text-black py-6 rounded-3xl font-black uppercase tracking-[0.3em] text-sm flex items-center justify-center gap-3 hover:shadow-[0_0_60px_rgba(0,237,100,0.4)] transition-all active:scale-[0.98]"
+                                                className="w-full bg-primary text-black py-6 rounded-3xl font-black uppercase tracking-[0.3em] text-sm flex items-center justify-center gap-3 hover:shadow-[0_0_60px_rgba(0,237,100,0.4)] transition-all active:scale-[0.98]"
                                             >
                                                 Sauvegarder la Mission <ChevronRight size={22} strokeWidth={3} />
                                             </button>
@@ -964,15 +1026,15 @@ export default function ProfilPage() {
                     {activeSection === "Voyages enregistrés" && (
                         <section className="space-y-12 animate-in fade-in duration-1000">
                             {/* Header Section */}
-                            <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/5 pb-12">
+                            <div className="flex flex-col md:flex-row justify-between items-start gap-6 border-b border-white/5 pb-12">
                                 <div className="space-y-2">
-                                    <div className="flex items-center gap-3 text-[#00ed64] mb-2">
-                                        <div className="w-2 h-2 rounded-full bg-[#00ed64] animate-pulse" />
+                                    <div className="flex items-center gap-3 text-primary mb-2">
+                                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                                         <p className="text-[10px] font-black uppercase tracking-[0.4em]">Archive des Missions</p>
                                     </div>
-                                    <h2 className="text-5xl font-black italic tracking-tight">Vos Récits de Voyage.</h2>
+                                    <h2 className="text-3xl md:text-5xl font-black italic tracking-tight">Vos Récits de Voyage.</h2>
                                 </div>
-                                <nav className="flex gap-8">
+                                <nav className="flex gap-4 md:gap-8 overflow-x-auto no-scrollbar flex-nowrap pb-2">
                                     {["À venir", "Brouillons", "Historique"].map((tab) => {
                                         const count = tab === "À venir" ? voyages.filter(v => new Date(v.startDate) > now).length
                                             : tab === "Brouillons" ? voyages.filter(v => !v.isGenerated).length
@@ -981,17 +1043,17 @@ export default function ProfilPage() {
                                             <button
                                                 key={tab}
                                                 onClick={() => setActiveTab(tab)}
-                                                className={`group relative py-2 px-1 text-xs font-black tracking-widest uppercase transition-all ${activeTab === tab ? "text-white" : "text-[#a3b1a3] hover:text-white"
+                                                className={`group relative py-2 px-1 text-[10px] md:text-xs font-black tracking-widest uppercase transition-all whitespace-nowrap ${activeTab === tab ? "text-white" : "text-[#a3b1a3] hover:text-white"
                                                     }`}
                                             >
                                                 <span className="relative z-10 flex items-center gap-2">
                                                     {tab}
-                                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold transition-all ${activeTab === tab ? "bg-[#00ed64] text-black" : "bg-white/5 text-[#a3b1a3]"}`}>
+                                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold transition-all ${activeTab === tab ? "bg-primary text-black" : "bg-white/5 text-[#a3b1a3]"}`}>
                                                         {count}
                                                     </span>
                                                 </span>
                                                 {activeTab === tab && (
-                                                    <div className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#00ed64] shadow-[0_0_20px_rgba(0,237,100,0.8)]" />
+                                                    <div className="absolute -bottom-1 left-0 right-0 h-[2px] bg-primary shadow-primary/30" />
                                                 )}
                                             </button>
                                         );
@@ -1002,7 +1064,7 @@ export default function ProfilPage() {
                             {/* Trips Grid */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                                 {filteredVoyages.length > 0 ? filteredVoyages.map((v) => (
-                                    <div key={v.id} className="group relative bg-[#050f05] border border-white/5 rounded-[3rem] overflow-hidden flex flex-col md:flex-row h-auto md:h-[320px] hover:border-[#00ed64]/20 transition-all duration-700">
+                                    <div key={v.id} className="group relative bg-[#050f05] border border-white/5 rounded-[3rem] overflow-hidden flex flex-col md:flex-row h-auto md:h-[320px] hover:border-primary/20 transition-all duration-700">
                                         {/* Image Section */}
                                         <div className="w-full md:w-[45%] relative h-64 md:h-full overflow-hidden">
                                             <img
@@ -1015,7 +1077,7 @@ export default function ProfilPage() {
 
                                             <div className="absolute top-6 left-6">
                                                 <div className="px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-2">
-                                                    <div className={`w-2 h-2 rounded-full ${new Date(v.endDate) < now ? "bg-white/20" : "bg-[#00ed64] shadow-[0_0_10px_rgba(0,237,100,0.5)]"}`} />
+                                                    <div className={`w-2 h-2 rounded-full ${new Date(v.endDate) < now ? "bg-white/20" : "bg-primary shadow-[0_0_10px_rgba(0,237,100,0.5)]"}`} />
                                                     <span className="text-[9px] font-black text-white uppercase tracking-widest">
                                                         {new Date(v.endDate) < now ? "ARCHIVE" : v.isGenerated ? "CONFIRMÉ" : "BROUILLON"}
                                                     </span>
@@ -1026,7 +1088,7 @@ export default function ProfilPage() {
                                         {/* Info Section */}
                                         <div className="flex-1 p-8 md:p-10 flex flex-col justify-between">
                                             <div className="space-y-4">
-                                                <h4 className="text-3xl font-black italic text-white leading-tight group-hover:text-[#00ed64] transition-colors line-clamp-2">
+                                                <h4 className="text-3xl font-black italic text-white leading-tight group-hover:text-primary transition-colors line-clamp-2">
                                                     {v.country?.name ? `${v.country.name}` : "Nouvelle Mission"}
                                                 </h4>
                                                 <div className="flex flex-wrap gap-2 opacity-60">
@@ -1038,24 +1100,32 @@ export default function ProfilPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-6 pt-6 border-t border-white/5">
-                                                <div className="space-y-1">
-                                                    <p className="text-[9px] font-black text-[#a3b1a3] uppercase tracking-[0.2em]">Temporalité</p>
-                                                    <p className="text-sm font-black flex items-center gap-2 italic">
-                                                        <Calendar size={14} className="text-[#00ed64]" />
-                                                        {new Date(v.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            <div className="flex items-center gap-6 pt-6 border-t border-white/5">
+                                                <div className="space-y-1 min-w-0">
+                                                    <p className="text-[9px] font-black text-[#a3b1a3] uppercase tracking-[0.2em]">Départ</p>
+                                                    <p className="text-sm font-black flex items-center gap-1.5 whitespace-nowrap">
+                                                        <Calendar size={13} className="text-primary shrink-0" />
+                                                        {new Date(v.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                                                     </p>
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <p className="text-[9px] font-black text-[#a3b1a3] uppercase tracking-[0.2em]">Investissement</p>
-                                                    <p className="text-sm font-black text-[#00ed64] italic underline decoration-2 underline-offset-4">{v.budget || "1500"}€</p>
+                                                <div className="w-px h-8 bg-white/5" />
+                                                <div className="space-y-1 min-w-0">
+                                                    <p className="text-[9px] font-black text-[#a3b1a3] uppercase tracking-[0.2em]">Retour</p>
+                                                    <p className="text-sm font-black whitespace-nowrap">
+                                                        {new Date(v.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                                    </p>
+                                                </div>
+                                                <div className="w-px h-8 bg-white/5" />
+                                                <div className="space-y-1 min-w-0">
+                                                    <p className="text-[9px] font-black text-[#a3b1a3] uppercase tracking-[0.2em]">Budget</p>
+                                                    <p className="text-sm font-black text-primary whitespace-nowrap">{v.budget || "1500"}€</p>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center gap-4 mt-8">
                                                 <button
                                                     onClick={() => router.push(`/itineraires/${v.id}`)}
-                                                    className="flex-1 bg-white/5 border border-white/10 hover:bg-[#00ed64] hover:text-black hover:border-[#00ed64] py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-2 group/btn active:scale-95"
+                                                    className="flex-1 bg-white/5 border border-white/10 hover:bg-primary hover:text-black hover:border-primary py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-2 group/btn active:scale-95"
                                                 >
                                                     VOIR LE RÉCIT <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
                                                 </button>
@@ -1077,7 +1147,7 @@ export default function ProfilPage() {
                                             <h3 className="text-2xl font-black italic">Archive Vide</h3>
                                             <p className="text-[#a3b1a3] font-medium max-w-xs mx-auto text-sm">Votre histoire reste à écrire. Commencez par définir votre prochaine destination.</p>
                                         </div>
-                                        <button onClick={() => setActiveSection("Planifier un voyage")} className="bg-[#00ed64] text-black px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-[0_10px_30px_rgba(0,237,100,0.2)] hover:shadow-[0_20px_40px_rgba(0,237,100,0.4)] transition-all">
+                                        <button onClick={() => setActiveSection("Planifier un voyage")} className="bg-primary text-black px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-[0_10px_30px_rgba(0,237,100,0.2)] hover:shadow-[0_20px_40px_rgba(0,237,100,0.4)] transition-all">
                                             LANCER UNE MISSION
                                         </button>
                                     </div>
@@ -1086,11 +1156,11 @@ export default function ProfilPage() {
                                 {/* Modern "Add Trip" Card */}
                                 <button
                                     onClick={() => setActiveSection("Planifier un voyage")}
-                                    className="group relative h-auto md:h-[320px] bg-white/[0.02] border-2 border-dashed border-white/5 rounded-[3.5rem] p-10 flex items-center justify-center overflow-hidden hover:bg-white/[0.04] hover:border-[#00ed64]/20 transition-all duration-700"
+                                    className="group relative h-auto md:h-[320px] bg-white/[0.02] border-2 border-dashed border-white/5 rounded-[3.5rem] p-10 flex items-center justify-center overflow-hidden hover:bg-white/[0.04] hover:border-primary/20 transition-all duration-700"
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-br from-[#00ed64]/0 via-[#00ed64]/0 to-[#00ed64]/5 group-hover:to-[#00ed64]/10 transition-all" />
                                     <div className="relative z-10 flex flex-col items-center gap-6">
-                                        <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center group-hover:bg-[#00ed64] group-hover:rotate-12 transition-all duration-500 group-hover:shadow-[0_15px_30px_rgba(0,237,100,0.3)]">
+                                        <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center group-hover:bg-primary group-hover:rotate-12 transition-all duration-500 group-hover:shadow-[0_15px_30px_rgba(0,237,100,0.3)]">
                                             <Plus size={40} className="text-white/20 group-hover:text-black transition-colors" strokeWidth={3} />
                                         </div>
                                         <div className="text-center">
@@ -1108,20 +1178,20 @@ export default function ProfilPage() {
                             {/* Hero Settings Section */}
                             <div className="flex flex-col md:flex-row items-end gap-8 mb-4">
                                 <div className="relative group">
-                                    <div className="w-40 h-40 rounded-3xl border-2 border-[#00ed64] p-1.5 bg-[#050f05] shadow-[0_0_30px_rgba(0,237,100,0.1)]">
+                                    <div className="w-40 h-40 rounded-3xl border-2 border-primary p-1.5 bg-[#050f05] shadow-[0_0_30px_rgba(0,237,100,0.1)]">
                                         <img
                                             src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=400&fit=crop"
                                             alt="Profile Preview"
                                             className="w-full h-full rounded-2xl object-cover"
                                         />
-                                        <button className="absolute -bottom-3 -right-3 w-10 h-10 bg-[#00ed64] text-black rounded-xl flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
+                                        <button className="absolute -bottom-3 -right-3 w-10 h-10 bg-primary text-black rounded-xl flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
                                             <Plus size={20} strokeWidth={3} />
                                         </button>
                                     </div>
                                 </div>
                                 <div className="flex-1 space-y-1">
                                     <h2 className="text-4xl font-black tracking-tight">{user?.firstName} {user?.lastName}</h2>
-                                    <p className="text-[#a3b1a3] font-bold text-lg">Gérer les préférences de votre mission Sankofa</p>
+                                    <p className="text-[#a3b1a3] font-bold text-lg">Gérer les préférences de votre mission Aliniosié</p>
                                 </div>
                                 <div className="flex gap-3">
                                     {!isEditing ? (
@@ -1141,7 +1211,7 @@ export default function ProfilPage() {
                                             </button>
                                             <button
                                                 onClick={handleSaveProfile}
-                                                className="bg-[#00ed64] text-black px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,237,100,0.4)] transition-all"
+                                                className="bg-primary text-black px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,237,100,0.4)] transition-all"
                                             >
                                                 Sauvegarder
                                             </button>
@@ -1159,7 +1229,7 @@ export default function ProfilPage() {
                                         </div>
 
                                         <div className="space-y-4 relative z-10">
-                                            <h3 className="text-xl font-black italic uppercase tracking-widest text-[#00ed64]">Identité Personnelle</h3>
+                                            <h3 className="text-xl font-black italic uppercase tracking-widest text-primary">Identité Personnelle</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                                 <div className="space-y-2">
                                                     <label className="text-[10px] uppercase font-black text-[#a3b1a3] ml-1 tracking-widest">Prénom</label>
@@ -1168,7 +1238,7 @@ export default function ProfilPage() {
                                                         value={isEditing ? editedUser?.firstName : user?.firstName || ""}
                                                         onChange={(e) => setEditedUser({ ...editedUser, firstName: e.target.value })}
                                                         readOnly={!isEditing}
-                                                        className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm text-white focus:outline-none transition-all ${!isEditing ? "cursor-not-allowed text-white/40" : "focus:border-[#00ed64]/50 focus:bg-white/[0.08]"}`}
+                                                        className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm text-white focus:outline-none transition-all ${!isEditing ? "cursor-not-allowed text-white/40" : "focus:border-primary/50 focus:bg-white/[0.08]"}`}
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
@@ -1178,7 +1248,7 @@ export default function ProfilPage() {
                                                         value={isEditing ? editedUser?.lastName : user?.lastName || ""}
                                                         onChange={(e) => setEditedUser({ ...editedUser, lastName: e.target.value })}
                                                         readOnly={!isEditing}
-                                                        className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm text-white focus:outline-none transition-all ${!isEditing ? "cursor-not-allowed text-white/40" : "focus:border-[#00ed64]/50 focus:bg-white/[0.08]"}`}
+                                                        className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm text-white focus:outline-none transition-all ${!isEditing ? "cursor-not-allowed text-white/40" : "focus:border-primary/50 focus:bg-white/[0.08]"}`}
                                                     />
                                                 </div>
                                                 <div className="space-y-2 md:col-span-2">
@@ -1188,21 +1258,21 @@ export default function ProfilPage() {
                                                         value={isEditing ? editedUser?.email : user?.email || ""}
                                                         onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
                                                         readOnly={!isEditing}
-                                                        className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm text-white focus:outline-none transition-all ${!isEditing ? "cursor-not-allowed text-white/40" : "focus:border-[#00ed64]/50 focus:bg-white/[0.08]"}`}
+                                                        className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm text-white focus:outline-none transition-all ${!isEditing ? "cursor-not-allowed text-white/40" : "focus:border-primary/50 focus:bg-white/[0.08]"}`}
                                                     />
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="space-y-4 relative z-10 pt-4 border-t border-white/5">
-                                            <h3 className="text-xl font-black italic uppercase tracking-widest text-[#00ed64]">Localisation</h3>
+                                            <h3 className="text-xl font-black italic uppercase tracking-widest text-primary">Localisation</h3>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] uppercase font-black text-[#a3b1a3] ml-1 tracking-widest">Pays de résidence (Diaspora)</label>
                                                 <select
                                                     value={isEditing ? editedUser?.diasporaCountry : user?.diasporaCountry || ""}
                                                     onChange={(e) => setEditedUser({ ...editedUser, diasporaCountry: e.target.value })}
                                                     disabled={!isEditing}
-                                                    className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm text-white focus:outline-none appearance-none transition-all ${!isEditing ? "cursor-not-allowed text-white/40" : "focus:border-[#00ed64]/50 focus:bg-white/[0.08]"}`}
+                                                    className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm text-white focus:outline-none appearance-none transition-all ${!isEditing ? "cursor-not-allowed text-white/40" : "focus:border-primary/50 focus:bg-white/[0.08]"}`}
                                                 >
                                                     <option value="" disabled className="bg-[#0c1a0c]">Sélectionnez votre pays</option>
                                                     {countriesList.map((c) => (
@@ -1218,8 +1288,8 @@ export default function ProfilPage() {
                                 <div className="space-y-8">
                                     <div className="bg-[#0c1a0c] border border-white/5 rounded-[2.5rem] p-10 space-y-8 h-full">
                                         <div className="space-y-6">
-                                            <div className="flex items-center gap-4 text-[#00ed64]">
-                                                <div className="w-10 h-10 rounded-xl bg-[#00ed64]/10 flex items-center justify-center">
+                                            <div className="flex items-center gap-4 text-primary">
+                                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                                                     <Diamond size={20} />
                                                 </div>
                                                 <h3 className="text-lg font-black italic uppercase tracking-widest">Sécurité</h3>
@@ -1236,8 +1306,8 @@ export default function ProfilPage() {
                                         </div>
 
                                         <div className="pt-8 border-t border-white/5 space-y-6">
-                                            <div className="flex items-center gap-4 text-[#00ed64]">
-                                                <div className="w-10 h-10 rounded-xl bg-[#00ed64]/10 flex items-center justify-center">
+                                            <div className="flex items-center gap-4 text-primary">
+                                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                                                     <Share2 size={20} />
                                                 </div>
                                                 <h3 className="text-lg font-black italic uppercase tracking-widest">Préférences</h3>
@@ -1245,7 +1315,7 @@ export default function ProfilPage() {
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-sm font-bold text-white/60">Profil Public</span>
-                                                    <div className="w-12 h-6 bg-[#00ed64] rounded-full relative cursor-pointer">
+                                                    <div className="w-12 h-6 bg-primary rounded-full relative cursor-pointer">
                                                         <div className="absolute right-1 top-1 w-4 h-4 bg-black rounded-full shadow-lg" />
                                                     </div>
                                                 </div>
@@ -1272,6 +1342,21 @@ export default function ProfilPage() {
 
                 </main>
             </div>
-        </>
+        </div>
+
+    );
+}
+
+export default function ProfilPage() {
+    return (
+        <Suspense fallback={
+            <div className="bg-[#050f05] min-h-screen text-white flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+            </div>
+        }>
+            <ProfilContent />
+        </Suspense>
     );
 }
