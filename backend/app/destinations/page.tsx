@@ -17,7 +17,7 @@ export default function Destinations() {
 
     const fetchCountries = async () => {
         try {
-            const response = await fetch("http://localhost:3000/api/countries");
+            const response = await fetch("/api/countries");
             const data = await response.json();
             return data;
         } catch (error) {
